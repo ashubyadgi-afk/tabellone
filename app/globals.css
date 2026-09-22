@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-50 text-slate-900;
+  font-family: var(--font-geist), system-ui, sans-serif;
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-[#1e3a5f] via-[#2d4a6f] to-orange-600 bg-clip-text text-transparent;
+  }
+  .tabellone-gradient {
+    background: linear-gradient(to right, #4c4bff, #8c47ee, #e647a7, #ff8c3a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-glow {
+    background: radial-gradient(
+      ellipse 80% 60% at 50% -20%,
+      rgba(232, 93, 4, 0.15),
+      transparent
+    );
+  }
+}
+
+.tabellone-map-pin {
+  background: transparent;
+  border: none;
+}

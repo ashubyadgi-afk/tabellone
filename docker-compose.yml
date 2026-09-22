@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tabellone
+      POSTGRES_PASSWORD: tabellone
+      POSTGRES_DB: tabellone
+    ports:
+      - "5432:5432"
+    volumes:
+      - tabellone_pg:/var/lib/postgresql/data
+
+volumes:
+  tabellone_pg:

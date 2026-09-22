@@ -1,0 +1,494 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrganizationType {
+  owner
+  advertiser
+}
+
+enum OrganizationStatus {
+  active
+  suspended
+}
+
+enum UserRole {
+  admin
+  owner
+  advertiser
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum VerificationStatus {
+  draft
+  submitted
+  under_review
+  approved
+  rejected
+}
+
+enum ImdStatus {
+  draft
+  active
+  inactive
+  under_maintenance
+  temporarily_unavailable
+  archived
+}
+
+enum MarketplaceListingStatus {
+  not_listed
+  listed
+  delisted
+}
+
+enum ListingStatus {
+  draft
+  submitted
+  under_review
+  approved
+  rejected
+  suspended
+}
+
+enum BookingStatus {
+  draft
+  confirmed
+  active
+  completed
+  cancelled
+}
+
+enum BookingRequestStatus {
+  draft
+  submitted
+  under_review
+  approved
+  rejected
+  payment_pending
+  paid
+  confirmed
+  cancelled
+  expired
+}
+
+enum InvoiceStatus {
+  draft
+  issued
+  paid
+  void
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  completed
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  upi
+  card
+  wallet
+  bank_transfer
+}
+
+enum NotificationType {
+  listing
+  booking
+  payment
+  approval
+  rejection
+  reminder
+  system
+}
+
+enum SubscriptionPlanTier {
+  free
+  starter
+  professional
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  pending_payment
+}
+
+model Organization {
+  id             String             @id @default(uuid())
+  name           String
+  brandName      String?            @map("brand_name")
+  email          String             @unique
+  sector         String?
+  contactPerson  String?            @map("contact_person")
+  contactPhone   String?            @map("contact_phone")
+  branchLocation String?            @map("branch_location")
+  type           OrganizationType
+  status         OrganizationStatus @default(active)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  users              User[]
+  ownerProfile       OwnerProfile?
+  advertiserProfile  AdvertiserProfile?
+  adSpaces           AdSpace[]
+  clients            Client[]
+  bookings           Booking[]
+  invoices           Invoice[]
+  campaigns          Campaign[]
+  bookingRequests    BookingRequest[]
+  wishlistItems      WishlistItem[]
+  wallet             Wallet?
+  payments           Payment[]
+  subscriptions      Subscription[]
+  notifications      Notification[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String     @id @default(uuid())
+  email          String     @unique
+  passwordHash   String     @map("password_hash")
+  role           UserRole
+  status         UserStatus @default(active)
+  organizationId String?    @map("organization_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  organization      Organization?      @relation(fields: [organizationId], references: [id])
+  ownerProfile      OwnerProfile?
+  advertiserProfile AdvertiserProfile?
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+model OwnerProfile {
+  id                   String             @id @default(uuid())
+  userId               String             @unique @map("user_id")
+  organizationId       String             @unique @map("organization_id")
+  agencyName           String?            @map("agency_name")
+  officeAddress        String?            @map("office_address")
+  totalAdSpacesClaimed Int?               @map("total_ad_spaces_claimed")
+  verificationStatus   VerificationStatus @default(approved) @map("verification_status")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("owner_profiles")
+}
+
+model AdvertiserProfile {
+  id             String             @id @default(uuid())
+  userId         String             @unique @map("user_id")
+  organizationId String             @unique @map("organization_id")
+  panNumber      String?            @map("pan_number")
+  gstNumber      String?            @map("gst_number")
+  verificationStatus VerificationStatus @default(approved) @map("verification_status")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("advertiser_profiles")
+}
+
+model AdSpace {
+  id                       String                   @id @default(uuid())
+  organizationId           String                   @map("organization_id")
+  adSpaceNumber            String                   @map("ad_space_number")
+  name                     String
+  adSpaceType              String                   @default("billboard") @map("ad_space_type")
+  city                     String?
+  state                    String?
+  address                  String?
+  dimensions               String?
+  basePrice                Float?                   @map("base_price")
+  footfall                 Int?
+  peakHours                String?                  @map("peak_hours")
+  notes                    String?
+  amenities                String?
+  latitude                 Float?
+  longitude                Float?
+  photoUrl                 String?                  @map("photo_url")
+  photoUrls                String[]                 @default([]) @map("photo_urls")
+  rating                   Float?
+  availableFrom            DateTime?                @map("available_from")
+  availableTo              DateTime?                @map("available_to")
+  imdStatus                ImdStatus                @default(active) @map("imd_status")
+  marketplaceListingStatus MarketplaceListingStatus @default(not_listed) @map("marketplace_listing_status")
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  updatedAt                DateTime                 @updatedAt @map("updated_at")
+
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  bookings         Booking[]
+  marketplaceListing MarketplaceListing?
+  bookingRequests  BookingRequest[]
+  wishlistItems    WishlistItem[]
+
+  @@unique([organizationId, adSpaceNumber])
+  @@map("ad_spaces")
+}
+
+model MarketplaceListing {
+  id             String        @id @default(uuid())
+  adSpaceId      String        @unique @map("ad_space_id")
+  status         ListingStatus @default(draft)
+  title          String?
+  description    String?
+  ownershipType  String?       @map("ownership_type")
+  documentNotes  String?       @map("document_notes")
+  submittedAt    DateTime?     @map("submitted_at")
+  reviewedAt     DateTime?     @map("reviewed_at")
+  reviewNotes    String?       @map("review_notes")
+  reviewedById   String?       @map("reviewed_by_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  adSpace AdSpace @relation(fields: [adSpaceId], references: [id])
+
+  @@map("marketplace_listings")
+}
+
+model Client {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  businessName   String?  @map("business_name")
+  email          String?
+  contactPhone   String?  @map("contact_phone")
+  address        String?
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  bookings     Booking[]
+
+  @@map("clients")
+}
+
+model Booking {
+  id                String        @id @default(uuid())
+  organizationId    String        @map("organization_id")
+  adSpaceId         String        @map("ad_space_id")
+  clientId          String        @map("client_id")
+  startDate         DateTime      @map("start_date")
+  endDate           DateTime      @map("end_date")
+  status            BookingStatus @default(confirmed)
+  amount            Float?
+  campaignReference String?       @map("campaign_reference")
+  notes             String?
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  adSpace      AdSpace      @relation(fields: [adSpaceId], references: [id])
+  client       Client       @relation(fields: [clientId], references: [id])
+  invoice      Invoice?
+
+  @@map("bookings")
+}
+
+model Campaign {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  productService String?  @map("product_service")
+  sector         String?
+  targetLocation String?  @map("target_location")
+  budget         Float?
+  preferredSize  String?  @map("preferred_size")
+  expectedFootfall Int?   @map("expected_footfall")
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
+  creativeUrl    String?  @map("creative_url")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization    Organization     @relation(fields: [organizationId], references: [id])
+  bookingRequests BookingRequest[]
+
+  @@map("campaigns")
+}
+
+model BookingRequest {
+  id                    String               @id @default(uuid())
+  organizationId        String               @map("organization_id")
+  adSpaceId             String               @map("ad_space_id")
+  campaignId            String?              @map("campaign_id")
+  startDate             DateTime             @map("start_date")
+  endDate               DateTime             @map("end_date")
+  status                BookingRequestStatus @default(submitted)
+  basePrice             Float                @map("base_price")
+  commissionAmount      Float                @map("commission_amount")
+  gstOnCommission       Float                @map("gst_on_commission")
+  tdsAmount             Float                @map("tds_amount")
+  ownerPayout           Float                @map("owner_payout")
+  customerPrice         Float                @map("customer_price")
+  creativeUrl           String?              @map("creative_url")
+  campaignNotes         String?              @map("campaign_notes")
+  reviewNotes           String?              @map("review_notes")
+  reviewedAt            DateTime?            @map("reviewed_at")
+  submittedAt           DateTime             @default(now()) @map("submitted_at")
+  createdAt             DateTime             @default(now()) @map("created_at")
+  updatedAt             DateTime             @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  adSpace      AdSpace      @relation(fields: [adSpaceId], references: [id])
+  campaign     Campaign?    @relation(fields: [campaignId], references: [id])
+  payment      Payment?
+
+  @@map("booking_requests")
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  organizationId String        @map("organization_id")
+  bookingId      String        @unique @map("booking_id")
+  invoiceNumber  String        @unique @map("invoice_number")
+  totalAmount    Float         @map("total_amount")
+  status         InvoiceStatus @default(issued)
+  issuedAt       DateTime      @default(now()) @map("issued_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  booking      Booking      @relation(fields: [bookingId], references: [id])
+
+  @@map("invoices")
+}
+
+model WishlistItem {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  adSpaceId      String   @map("ad_space_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  adSpace      AdSpace      @relation(fields: [adSpaceId], references: [id])
+
+  @@unique([organizationId, adSpaceId])
+  @@map("wishlist_items")
+}
+
+model PricingConfig {
+  id              String   @id @default("default")
+  commissionRate  Float    @default(0.10) @map("commission_rate")
+  gstRate         Float    @default(0.18) @map("gst_rate")
+  tdsRate         Float    @default(0.02) @map("tds_rate")
+  platformGstRate Float    @default(0.18) @map("platform_gst_rate")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_config")
+}
+
+model Wallet {
+  id             String   @id @default(uuid())
+  organizationId String   @unique @map("organization_id")
+  balance        Float    @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  transactions Transaction[]
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id          String        @id @default(uuid())
+  walletId    String        @map("wallet_id")
+  amount      Float
+  type        String
+  description String?
+  referenceId String?       @map("reference_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@map("transactions")
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  organizationId   String        @map("organization_id")
+  bookingRequestId String        @unique @map("booking_request_id")
+  amount           Float
+  method           PaymentMethod
+  status           PaymentStatus @default(pending)
+  transactionRef   String?       @map("transaction_ref")
+  receiptUrl       String?       @map("receipt_url")
+  paidAt           DateTime?     @map("paid_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  bookingRequest BookingRequest @relation(fields: [bookingRequestId], references: [id])
+
+  @@map("payments")
+}
+
+model Notification {
+  id             String           @id @default(uuid())
+  organizationId String?          @map("organization_id")
+  userId         String?          @map("user_id")
+  type           NotificationType
+  title          String
+  message        String
+  read           Boolean          @default(false)
+  link           String?
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model SubscriptionPlan {
+  id           String               @id @default(uuid())
+  name         String
+  tier         SubscriptionPlanTier
+  priceMonthly Float                @map("price_monthly")
+  features     String?
+  maxListings  Int?                 @map("max_listings")
+  maxCampaigns Int?                 @map("max_campaigns")
+  active       Boolean              @default(true)
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id             String             @id @default(uuid())
+  organizationId String             @map("organization_id")
+  planId         String             @map("plan_id")
+  status         SubscriptionStatus @default(active)
+  startsAt       DateTime           @map("starts_at")
+  expiresAt      DateTime           @map("expires_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id])
+  plan         SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
