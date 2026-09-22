@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   FileCheck,
   IndianRupee,
+  Building2,
   Users,
   LogOut,
 } from "lucide-react";
@@ -17,7 +18,8 @@ const nav = [
   { href: "/admin/listings", label: "Listing approvals", icon: ClipboardCheck },
   { href: "/admin/booking-requests", label: "Booking requests", icon: FileCheck },
   { href: "/admin/pricing", label: "Pricing rules", icon: IndianRupee },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/owners", label: "Owners", icon: Building2 },
+  { href: "/admin/advertisers", label: "Advertisers", icon: Users },
 ];
 
 export function AdminSidebar({ email }: { email: string }) {

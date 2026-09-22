@@ -1,45 +1,34 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { requireApiRole, unauthorized } from "@/lib/api/auth-guard";
+import { getAdminHqStats, getAdminInsights } from "@/lib/services/admin.service";
 import { getPricingConfig } from "@/lib/services/pricing.service";
 
 export async function GET() {
   const session = await requireApiRole(["admin"]);
   if (!session) return unauthorized();
 
-  const [
-    owners,
-    advertisers,
-    listings,
-    bookingRequests,
-    payments,
-    listedSpaces,
-    pricing,
-  ] = await Promise.all([
-    prisma.organization.count({ where: { type: "owner" } }),
-    prisma.organization.count({ where: { type: "advertiser" } }),
-    prisma.marketplaceListing.count({ where: { status: "approved" } }),
-    prisma.bookingRequest.count(),
-    prisma.payment.count({ where: { status: "completed" } }),
-    prisma.adSpace.count({ where: { marketplaceListingStatus: "listed" } }),
+  const [stats, insights, pricing] = await Promise.all([
+    getAdminHqStats(),
+    getAdminInsights(),
     getPricingConfig(),
   ]);
 
-  const revenue = await prisma.payment.aggregate({
-    where: { status: "completed" },
-    _sum: { amount: true },
-  });
-
   return NextResponse.json({
     stats: {
-      owners,
-      advertisers,
-      approvedListings: listings,
-      listedSpaces,
-      bookingRequests,
-      completedPayments: payments,
-      totalRevenue: revenue._sum.amount ?? 0,
+      owners: stats.owners,
+      advertisers: stats.advertisers,
+      approvedListings: stats.approvedListings,
+      listedSpaces: stats.adSpacesListed,
+      bookingRequests: stats.openBookingRequests,
+      pendingListings: stats.pendingListings,
+      pendingRequests: stats.pendingRequests,
+      pendingVerifications: stats.pendingVerifications,
+      adSpacesTotal: stats.adSpacesTotal,
+      campaigns: stats.campaigns,
+      citiesWithAdSpaces: stats.citiesWithAdSpaces,
+      totalRevenue: stats.totalRevenue,
       commissionRate: pricing.commissionRate,
+      insights,
     },
   });
 }
