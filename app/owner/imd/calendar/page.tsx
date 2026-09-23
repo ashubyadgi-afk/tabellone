@@ -1,24 +1,46 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { PageHeader, Card, Badge } from "@/components/ui";
+import { PageHeader, Card, Badge, Button } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import {
+  addMonths,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
   format,
+  isValid,
   isWithinInterval,
+  parse,
+  subMonths,
 } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default async function CalendarPage() {
+function monthFromParam(value?: string) {
+  if (value && /^\d{4}-\d{2}$/.test(value)) {
+    const parsed = parse(`${value}-01`, "yyyy-MM-dd", new Date());
+    if (isValid(parsed)) return startOfMonth(parsed);
+  }
+  return startOfMonth(new Date());
+}
+
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const now = new Date();
-  const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
+  const { month } = await searchParams;
+  const monthStart = monthFromParam(month);
+  const monthEnd = endOfMonth(monthStart);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const monthKey = format(monthStart, "yyyy-MM");
+  const prevKey = format(subMonths(monthStart, 1), "yyyy-MM");
+  const nextKey = format(addMonths(monthStart, 1), "yyyy-MM");
+  const thisKey = format(startOfMonth(new Date()), "yyyy-MM");
 
   const bookings = await prisma.booking.findMany({
     where: {
@@ -40,7 +62,28 @@ export default async function CalendarPage() {
     <div>
       <PageHeader
         title="Availability Calendar"
-        description={format(now, "MMMM yyyy")}
+        description={format(monthStart, "MMMM yyyy")}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/owner/imd/calendar?month=${prevKey}`}>
+              <Button variant="secondary" type="button">
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </Button>
+            </Link>
+            {monthKey !== thisKey && (
+              <Link href="/owner/imd/calendar">
+                <Button variant="secondary" type="button">
+                  This month
+                </Button>
+              </Link>
+            )}
+            <Link href={`/owner/imd/calendar?month=${nextKey}`}>
+              <Button variant="secondary" type="button">
+                Next <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        }
       />
       <Card className="p-6">
         <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500 mb-2">
@@ -55,10 +98,12 @@ export default async function CalendarPage() {
           {days.map((day) => {
             const dayBookings = bookingsForDay(day);
             const booked = dayBookings.length > 0;
+            const dateValue = format(day, "yyyy-MM-dd");
             return (
-              <div
-                key={day.toISOString()}
-                className={`min-h-[88px] rounded-xl border p-2 text-left transition ${
+              <Link
+                key={dateValue}
+                href={`/owner/imd/bookings/new?startDate=${dateValue}&endDate=${dateValue}`}
+                className={`min-h-[88px] rounded-xl border p-2 text-left transition hover:border-[#4C4BFF]/40 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4C4BFF]/30 ${
                   booked
                     ? "border-orange-200 bg-orange-50/80"
                     : "border-slate-100 bg-slate-50/50"
@@ -74,10 +119,12 @@ export default async function CalendarPage() {
                     </p>
                   ))}
                   {dayBookings.length > 2 && (
-                    <p className="text-[10px] text-slate-500">+{dayBookings.length - 2} more</p>
+                    <p className="text-[10px] text-slate-500">
+                      +{dayBookings.length - 2} more
+                    </p>
                   )}
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -90,13 +137,18 @@ export default async function CalendarPage() {
             <p className="text-sm text-slate-500">No bookings this month</p>
           ) : (
             bookings.map((b) => (
-              <li key={b.id} className="flex items-center justify-between text-sm border-b border-slate-100 pb-2">
+              <li
+                key={b.id}
+                className="flex items-center justify-between text-sm border-b border-slate-100 pb-2"
+              >
                 <div>
                   <p className="font-medium">{b.adSpace.name}</p>
                   <p className="text-xs text-slate-500">{b.client.name}</p>
                 </div>
                 <div className="text-right">
-                  <Badge variant="warning">{formatDate(b.startDate)} – {formatDate(b.endDate)}</Badge>
+                  <Badge variant="warning">
+                    {formatDate(b.startDate)} – {formatDate(b.endDate)}
+                  </Badge>
                 </div>
               </li>
             ))
