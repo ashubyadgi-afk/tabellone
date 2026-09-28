@@ -8,32 +8,44 @@ const storedPhotoUrl = z
   .string()
   .refine(isStoredAdSpacePhotoUrl, "Invalid photo URL");
 
-const schema = z.object({
-  adSpaceNumber: z.string().min(1),
-  name: z.string().min(1),
-  adSpaceType: z.string().default("billboard"),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  address: z.string().optional(),
-  dimensions: z.string().optional(),
-  basePrice: z.number().optional(),
-  footfall: z.number().int().optional(),
-  peakHours: z.string().optional(),
-  notes: z.string().optional(),
-  availableFrom: z.string().optional(),
-  availableTo: z.string().optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
-  photoUrls: z.array(storedPhotoUrl).min(1, "Cover photo is required").max(3),
-  imdStatus: z.enum([
-    "draft",
-    "active",
-    "inactive",
-    "under_maintenance",
-    "temporarily_unavailable",
-    "archived",
-  ]).default("active"),
-});
+const schema = z
+  .object({
+    adSpaceNumber: z.string().min(1),
+    name: z.string().min(1),
+    adSpaceType: z.string().default("billboard"),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    address: z.string().optional(),
+    dimensions: z.string().optional(),
+    basePrice: z.number().optional(),
+    footfall: z.number().int().optional(),
+    peakHours: z.string().optional(),
+    notes: z.string().optional(),
+    availableFrom: z.string().optional(),
+    availableTo: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    photoUrls: z.array(storedPhotoUrl).max(3).default([]),
+    imdStatus: z
+      .enum([
+        "draft",
+        "active",
+        "inactive",
+        "under_maintenance",
+        "temporarily_unavailable",
+        "archived",
+      ])
+      .default("active"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.imdStatus !== "draft" && data.photoUrls.length < 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Cover photo is required",
+        path: ["photoUrls"],
+      });
+    }
+  });
 
 export async function GET() {
   const session = await getSession();
@@ -70,7 +82,7 @@ export async function POST(request: Request) {
     const adSpace = await prisma.adSpace.create({
       data: {
         ...rest,
-        photoUrl: photoUrls[0],
+        photoUrl: photoUrls[0] ?? null,
         photoUrls,
         organizationId: session.organizationId,
         availableFrom: availableFrom ? new Date(availableFrom) : undefined,

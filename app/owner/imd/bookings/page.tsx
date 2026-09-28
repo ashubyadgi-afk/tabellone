@@ -23,9 +23,18 @@ export default async function BookingsPage() {
         title="Bookings"
         description="Client bookings linked to Ad Spaces"
         action={
-          <Link href="/owner/imd/bookings/new">
-            <Button><Plus className="h-4 w-4" /> New Booking</Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href="/owner/imd/clients/new">
+              <Button variant="secondary">
+                <Plus className="h-4 w-4" /> Add Client
+              </Button>
+            </Link>
+            <Link href="/owner/imd/bookings/new">
+              <Button>
+                <Plus className="h-4 w-4" /> New Booking
+              </Button>
+            </Link>
+          </div>
         }
       />
       <Card className="overflow-hidden">

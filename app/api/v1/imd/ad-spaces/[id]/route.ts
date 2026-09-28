@@ -24,15 +24,17 @@ const schema = z.object({
   availableTo: z.string().optional().nullable(),
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
-  photoUrls: z.array(storedPhotoUrl).min(1, "Cover photo is required").max(3),
-  imdStatus: z.enum([
-    "draft",
-    "active",
-    "inactive",
-    "under_maintenance",
-    "temporarily_unavailable",
-    "archived",
-  ]).optional(),
+  photoUrls: z.array(storedPhotoUrl).max(3).default([]),
+  imdStatus: z
+    .enum([
+      "draft",
+      "active",
+      "inactive",
+      "under_maintenance",
+      "temporarily_unavailable",
+      "archived",
+    ])
+    .optional(),
 });
 
 async function getOwned(id: string, organizationId: string) {
@@ -87,14 +89,23 @@ export async function PATCH(
     );
   }
 
+  const nextStatus = parsed.data.imdStatus ?? existing.imdStatus;
+  const photoUrls = parsed.data.photoUrls ?? [];
+  if (nextStatus !== "draft" && photoUrls.length < 1) {
+    return NextResponse.json(
+      { error: { message: "Cover photo is required" } },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { availableFrom, availableTo, photoUrls, ...rest } = parsed.data;
+    const { availableFrom, availableTo, photoUrls: urls, ...rest } = parsed.data;
     const adSpace = await prisma.adSpace.update({
       where: { id },
       data: {
         ...rest,
-        photoUrl: photoUrls[0],
-        photoUrls,
+        photoUrl: urls[0] ?? null,
+        photoUrls: urls,
         city: rest.city || null,
         state: rest.state || null,
         address: rest.address || null,

@@ -22,13 +22,15 @@ export default async function OwnerLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <OwnerSidebar
-        organizationName={org.name}
-        userEmail={session.email}
-      />
-      <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
+    <div className="flex min-h-screen bg-slate-50 print:block print:bg-white">
+      <div className="print:hidden">
+        <OwnerSidebar
+          organizationName={org.name}
+          userEmail={session.email}
+        />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur-md print:hidden">
           <div className="flex h-16 items-center justify-between px-6 lg:px-8">
             <p className="text-sm text-slate-500">
               Phase 1 · Inventory Management Dashboard
@@ -38,7 +40,7 @@ export default async function OwnerLayout({
             </span>
           </div>
         </header>
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-6 lg:p-8 print:p-0">{children}</main>
       </div>
     </div>
   );

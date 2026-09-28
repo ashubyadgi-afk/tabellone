@@ -6,11 +6,17 @@ import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
+import { StateCityFields } from "@/components/ad-space/StateCityFields";
 import { normalizePhotoUrls } from "@/lib/ad-space-photos";
+import {
+  AD_SPACE_TYPES,
+  formatDimensions,
+  type DimensionUnit,
+} from "@/lib/marketplace/search";
 
 export default function NewAdSpacePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<"save" | "draft" | null>(null);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     adSpaceNumber: "",
@@ -19,7 +25,9 @@ export default function NewAdSpacePage() {
     city: "",
     state: "",
     address: "",
-    dimensions: "",
+    width: "",
+    height: "",
+    unit: "ft" as DimensionUnit,
     basePrice: "",
     footfall: "",
     peakHours: "",
@@ -33,21 +41,28 @@ export default function NewAdSpacePage() {
   const [photos, setPhotos] = useState<string[]>(["", "", ""]);
   const [photoError, setPhotoError] = useState("");
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!photos[0]) {
+  async function submit(asDraft: boolean) {
+    if (!form.adSpaceNumber.trim() || !form.name.trim()) {
+      setError("Ad Space number and Name are required.");
+      return;
+    }
+    if (!asDraft && !photos[0]) {
       setPhotoError("Upload a cover photo before saving.");
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
-    setLoading(true);
+    const dimensions = formatDimensions(form.width, form.height, form.unit);
+    setLoading(asDraft ? "draft" : "save");
     setError("");
     setPhotoError("");
+    const { width: _w, height: _h, unit: _u, ...rest } = form;
     const res = await fetch("/api/v1/imd/ad-spaces", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...form,
+        ...rest,
+        imdStatus: asDraft ? "draft" : form.imdStatus || "active",
+        dimensions: dimensions || undefined,
         photoUrls,
         basePrice: form.basePrice ? Number(form.basePrice) : undefined,
         footfall: form.footfall ? Number(form.footfall) : undefined,
@@ -56,7 +71,7 @@ export default function NewAdSpacePage() {
       }),
     });
     const data = await res.json();
-    setLoading(false);
+    setLoading(null);
     if (!res.ok) {
       setError(data.error?.message || "Failed to create");
       return;
@@ -74,7 +89,13 @@ export default function NewAdSpacePage() {
         </div>
       )}
       <Card className="max-w-2xl p-6">
-        <form onSubmit={submit} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit(false);
+          }}
+          className="space-y-4"
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Ad Space number *</Label>
@@ -87,12 +108,13 @@ export default function NewAdSpacePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Type</Label>
+              <Label>Category</Label>
               <Select value={form.adSpaceType} onChange={(e) => setForm({ ...form, adSpaceType: e.target.value })}>
-                <option value="billboard">Billboard</option>
-                <option value="digital">Digital</option>
-                <option value="mall">Mall</option>
-                <option value="vehicle">Vehicle</option>
+                {AD_SPACE_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
               </Select>
             </div>
             <div>
@@ -105,22 +127,18 @@ export default function NewAdSpacePage() {
               </Select>
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label>City</Label>
-              <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            </div>
-            <div>
-              <Label>State</Label>
-              <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-            </div>
-          </div>
+          <StateCityFields
+            state={form.state}
+            city={form.city}
+            onChange={({ state, city }) => setForm({ ...form, state, city })}
+          />
           <div>
             <Label>Address</Label>
             <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
           <PhotoUploader
             urls={photos}
+            coverRequired={false}
             error={photoError}
             onChange={(next) => {
               setPhotos(next);
@@ -135,11 +153,47 @@ export default function NewAdSpacePage() {
             }
             onClear={() => setForm({ ...form, latitude: "", longitude: "" })}
           />
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <Label>Dimensions</Label>
-              <Input value={form.dimensions} onChange={(e) => setForm({ ...form, dimensions: e.target.value })} placeholder="20x10 ft" />
+          <div>
+            <Label>Dimensions</Label>
+            <p className="mb-2 text-xs text-slate-500">Billboard face size</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <Label>Width</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={form.width}
+                  onChange={(e) => setForm({ ...form, width: e.target.value })}
+                  placeholder={form.unit === "ft" ? "20" : "6"}
+                />
+              </div>
+              <div>
+                <Label>Height</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={form.height}
+                  onChange={(e) => setForm({ ...form, height: e.target.value })}
+                  placeholder={form.unit === "ft" ? "10" : "3"}
+                />
+              </div>
+              <div>
+                <Label>Unit</Label>
+                <Select
+                  value={form.unit}
+                  onChange={(e) =>
+                    setForm({ ...form, unit: e.target.value as DimensionUnit })
+                  }
+                >
+                  <option value="ft">Feet</option>
+                  <option value="m">Meters</option>
+                </Select>
+              </div>
             </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Base price (₹)</Label>
               <Input type="number" value={form.basePrice} onChange={(e) => setForm({ ...form, basePrice: e.target.value })} />
@@ -175,9 +229,23 @@ export default function NewAdSpacePage() {
             <Label>Notes</Label>
             <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
-          <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={loading}>{loading ? "Saving…" : "Save Ad Space"}</Button>
-            <Link href="/owner/imd/ad-spaces"><Button variant="secondary">Cancel</Button></Link>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button type="submit" disabled={loading !== null}>
+              {loading === "save" ? "Saving…" : "Save Ad Space"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={loading !== null}
+              onClick={() => void submit(true)}
+            >
+              {loading === "draft" ? "Saving…" : "Save as Draft"}
+            </Button>
+            <Link href="/owner/imd/ad-spaces">
+              <Button type="button" variant="ghost" disabled={loading !== null}>
+                Cancel
+              </Button>
+            </Link>
           </div>
         </form>
       </Card>

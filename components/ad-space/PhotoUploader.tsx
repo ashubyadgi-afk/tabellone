@@ -15,13 +15,20 @@ type PhotoUploaderProps = {
   urls: string[];
   onChange: (urls: string[]) => void;
   error?: string;
+  /** When false, cover is optional (e.g. Save as Draft). Default true. */
+  coverRequired?: boolean;
 };
 
 function padUrls(urls: string[]) {
   return [urls[0] || "", urls[1] || "", urls[2] || ""];
 }
 
-export function PhotoUploader({ urls, onChange, error }: PhotoUploaderProps) {
+export function PhotoUploader({
+  urls,
+  onChange,
+  error,
+  coverRequired = true,
+}: PhotoUploaderProps) {
   const [busy, setBusy] = useState([false, false, false]);
   const [slotErrors, setSlotErrors] = useState(["", "", ""]);
   const padded = padUrls(urls);
@@ -63,17 +70,19 @@ export function PhotoUploader({ urls, onChange, error }: PhotoUploaderProps) {
 
   return (
     <div>
-      <Label>Photos *</Label>
+      <Label>{coverRequired ? "Photos *" : "Photos"}</Label>
       <p className="mt-1 text-xs text-slate-400">
-        Cover photo is required. You can add up to two extra photos. JPG, PNG, WebP, GIF, or AVIF.
-        Max 2 MB each.
+        {coverRequired
+          ? "Cover photo is required. You can add up to two extra photos."
+          : "Cover photo is required to activate. You can save as draft without photos."}{" "}
+        JPG, PNG, WebP, GIF, or AVIF. Max 2 MB each.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {SLOTS.map((slot, index) => (
           <PhotoSlot
             key={index}
             label={slot.label}
-            required={slot.required}
+            required={index === 0 ? coverRequired : false}
             url={padded[index]}
             error={slotErrors[index]}
             busy={busy[index]}

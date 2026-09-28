@@ -1,11 +1,17 @@
 import { formatDate, formatDateRange } from "@/lib/utils";
 
 export const AD_SPACE_TYPES = [
-  { value: "billboard", label: "Billboard" },
-  { value: "digital", label: "Digital" },
-  { value: "mall", label: "Mall" },
-  { value: "vehicle", label: "Vehicle" },
+  { value: "billboard", label: "Static Billboard" },
+  { value: "digital", label: "Digital Screen" },
+  { value: "mall", label: "Mall Ads" },
+  { value: "vehicle", label: "Vehicle Ads" },
 ] as const;
+
+export function adSpaceTypeLabel(value: string | null | undefined): string {
+  if (!value) return "";
+  const match = AD_SPACE_TYPES.find((type) => type.value === value);
+  return match?.label ?? value;
+}
 
 export const AD_SPACE_LOCATIONS = [
   { value: "Bangalore", label: "Bangalore" },
@@ -54,12 +60,64 @@ export function normalizeSizeToken(value: string): string {
   return value.toLowerCase().replace(/×/g, "x").replace(/\s+/g, "");
 }
 
+export type DimensionUnit = "ft" | "m";
+
+export type ParsedDimensions = {
+  width: number;
+  height: number;
+  unit: DimensionUnit;
+};
+
+const METERS_TO_FEET = 3.28084;
+
+function stripTrailingZero(value: number): string {
+  return String(Number(value.toFixed(2)));
+}
+
+export function formatDimensions(
+  width: number | string,
+  height: number | string,
+  unit: DimensionUnit
+): string | null {
+  const w = typeof width === "string" ? Number(width) : width;
+  const h = typeof height === "string" ? Number(height) : height;
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+  return `${stripTrailingZero(w)}x${stripTrailingZero(h)} ${unit}`;
+}
+
+export function parseDimensions(
+  value: string | null | undefined
+): ParsedDimensions | null {
+  if (!value?.trim()) return null;
+  const lower = value.toLowerCase();
+  const match = normalizeSizeToken(value).match(
+    /(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/
+  );
+  if (!match) return null;
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+  const unit: DimensionUnit =
+    /\b(m|meter|metre|meters|metres)\b/.test(lower) &&
+    !/\b(ft|feet|foot)\b/.test(lower)
+      ? "m"
+      : "ft";
+  return { width, height, unit };
+}
+
 export function matchesSize(
   dimensions: string | null | undefined,
   size: string | undefined
 ): boolean {
   if (!size) return true;
   if (!dimensions) return false;
+  const got = parseDimensionFeet(dimensions);
+  const need = parseDimensionFeet(size);
+  if (got && need) {
+    return (
+      Math.abs(got[0] - need[0]) < 0.05 && Math.abs(got[1] - need[1]) < 0.05
+    );
+  }
   return normalizeSizeToken(dimensions).includes(normalizeSizeToken(size));
 }
 
@@ -67,14 +125,14 @@ export function matchesSize(
 export function parseDimensionFeet(
   value: string | null | undefined
 ): [number, number] | null {
-  if (!value) return null;
-  const match = normalizeSizeToken(value).match(
-    /(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/
-  );
-  if (!match) return null;
-  const a = Number(match[1]);
-  const b = Number(match[2]);
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  const parsed = parseDimensions(value);
+  if (!parsed) return null;
+  let a = parsed.width;
+  let b = parsed.height;
+  if (parsed.unit === "m") {
+    a *= METERS_TO_FEET;
+    b *= METERS_TO_FEET;
+  }
   return a >= b ? [a, b] : [b, a];
 }
 

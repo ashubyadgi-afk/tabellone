@@ -7,6 +7,7 @@ import { PageHeader, Button, Card, Badge } from "@/components/ui";
 import { Plus, Pencil } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { adSpacePhotos } from "@/lib/ad-space-photos";
+import { adSpaceTypeLabel } from "@/lib/marketplace/search";
 
 export default async function AdSpacesPage() {
   const session = await getSession();
@@ -37,7 +38,7 @@ export default async function AdSpacesPage() {
           <thead className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-6 py-4">ID / Name</th>
-              <th className="px-6 py-4">Type</th>
+              <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4">Location</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Base price</th>
@@ -80,7 +81,7 @@ export default async function AdSpacesPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 capitalize text-slate-600">{a.adSpaceType}</td>
+                  <td className="px-6 py-4 text-slate-600">{adSpaceTypeLabel(a.adSpaceType)}</td>
                   <td className="px-6 py-4 text-slate-600">
                     {[a.city, a.state].filter(Boolean).join(", ") || "—"}
                   </td>
