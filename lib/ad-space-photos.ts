@@ -44,11 +44,22 @@ export function sniffImageMime(bytes: Uint8Array): AllowedImageMime | null {
 
 const LOCAL_UPLOAD_PHOTO_RE =
   /^\/uploads\/ad-spaces\/[a-z0-9-]+\/[a-z0-9-]+\.(jpe?g|png|webp|gif|avif)$/i;
+const PUBLIC_SAMPLE_PHOTO_RE =
+  /^\/ad-spaces\/[a-z0-9][a-z0-9._-]*\.(jpe?g|png|webp|gif|avif)$/i;
 const VERCEL_BLOB_PHOTO_RE =
   /^https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\.com\/.+\.(jpe?g|png|webp|gif|avif)(\?.*)?$/i;
 
 export function isStoredAdSpacePhotoUrl(url: string) {
-  return LOCAL_UPLOAD_PHOTO_RE.test(url) || VERCEL_BLOB_PHOTO_RE.test(url);
+  return (
+    LOCAL_UPLOAD_PHOTO_RE.test(url) ||
+    PUBLIC_SAMPLE_PHOTO_RE.test(url) ||
+    VERCEL_BLOB_PHOTO_RE.test(url)
+  );
+}
+
+/** New uploads must match stored patterns; existing rows may keep their current URLs. */
+export function isAllowedAdSpacePhotoUrl(url: string, alreadyStored: string[]) {
+  return isStoredAdSpacePhotoUrl(url) || alreadyStored.includes(url);
 }
 
 export function adSpacePhotos(space: {

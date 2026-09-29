@@ -52,14 +52,14 @@ export default async function ImdDashboardPage() {
           value={stats.activeAdSpaces}
           icon={CheckCircle2}
           accent="emerald"
-          href="/owner/imd/ad-spaces"
+          href="/owner/imd/ad-spaces?filter=active"
         />
         <StatCard
           label="Inactive / maintenance"
           value={stats.inactiveAdSpaces}
           icon={XCircle}
           accent="slate"
-          href="/owner/imd/ad-spaces"
+          href="/owner/imd/ad-spaces?filter=inactive"
         />
         <StatCard
           label="Booked now"
@@ -73,7 +73,7 @@ export default async function ImdDashboardPage() {
           value={stats.available}
           icon={CalendarClock}
           accent="violet"
-          href="/owner/imd/ad-spaces"
+          href="/owner/imd/ad-spaces?filter=available"
         />
         <StatCard
           label="Upcoming (30d)"

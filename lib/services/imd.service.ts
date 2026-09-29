@@ -134,6 +134,73 @@ export async function generateInvoiceNumber(organizationId: string): Promise<str
   return `${prefix}-${String(count + 1).padStart(4, "0")}`;
 }
 
+export type AdSpaceListFilter = "all" | "active" | "inactive" | "available";
+
+export function parseAdSpaceListFilter(raw?: string): AdSpaceListFilter {
+  if (raw === "active" || raw === "inactive" || raw === "available") return raw;
+  return "all";
+}
+
+export const AD_SPACE_LIST_COPY: Record<
+  AdSpaceListFilter,
+  { title: string; description: string; empty: string }
+> = {
+  all: {
+    title: "Ad Spaces",
+    description: "Your advertising inventory in IMD",
+    empty: "No Ad Spaces yet.",
+  },
+  active: {
+    title: "Active Ad Spaces",
+    description: "Spaces currently marked Active",
+    empty: "No active Ad Spaces.",
+  },
+  inactive: {
+    title: "Inactive Ad Spaces",
+    description: "Spaces marked Inactive or Under Maintenance",
+    empty: "No inactive Ad Spaces.",
+  },
+  available: {
+    title: "Available Ad Spaces",
+    description: "Active spaces that are not booked today",
+    empty: "No available Ad Spaces right now.",
+  },
+};
+
+function isBookedToday(
+  bookings: Array<{ startDate: Date; endDate: Date }>,
+  todayStart: Date,
+  todayEnd: Date
+) {
+  return bookings.some((b) => b.startDate <= todayEnd && b.endDate >= todayStart);
+}
+
+export async function listOwnerAdSpaces(
+  organizationId: string,
+  filter: AdSpaceListFilter
+) {
+  const todayStart = startOfDay(new Date());
+  const todayEnd = endOfDay(new Date());
+
+  const items = await prisma.adSpace.findMany({
+    where: { organizationId, imdStatus: { not: "archived" } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      bookings: { where: { status: { in: ["confirmed", "active"] } } },
+    },
+  });
+
+  return items.filter((space) => {
+    const booked = isBookedToday(space.bookings, todayStart, todayEnd);
+    if (filter === "active") return space.imdStatus === "active";
+    if (filter === "inactive") {
+      return space.imdStatus === "inactive" || space.imdStatus === "under_maintenance";
+    }
+    if (filter === "available") return space.imdStatus === "active" && !booked;
+    return true;
+  });
+}
+
 export const IMD_STATUS_LABELS: Record<ImdStatus, string> = {
   draft: "Draft",
   active: "Active",

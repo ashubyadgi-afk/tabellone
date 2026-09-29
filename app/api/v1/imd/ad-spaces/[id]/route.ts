@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { isStoredAdSpacePhotoUrl } from "@/lib/ad-space-photos";
+import {
+  adSpacePhotos,
+  isAllowedAdSpacePhotoUrl,
+} from "@/lib/ad-space-photos";
 
-const storedPhotoUrl = z
-  .string()
-  .refine(isStoredAdSpacePhotoUrl, "Invalid photo URL");
+const storedPhotoUrl = z.string().min(1);
 
 const schema = z.object({
   adSpaceNumber: z.string().min(1),
@@ -89,8 +90,16 @@ export async function PATCH(
     );
   }
 
-  const nextStatus = parsed.data.imdStatus ?? existing.imdStatus;
+  const alreadyStored = adSpacePhotos(existing);
   const photoUrls = parsed.data.photoUrls ?? [];
+  if (photoUrls.some((url) => !isAllowedAdSpacePhotoUrl(url, alreadyStored))) {
+    return NextResponse.json(
+      { error: { message: "Invalid photo URL" } },
+      { status: 400 }
+    );
+  }
+
+  const nextStatus = parsed.data.imdStatus ?? existing.imdStatus;
   if (nextStatus !== "draft" && photoUrls.length < 1) {
     return NextResponse.json(
       { error: { message: "Cover photo is required" } },

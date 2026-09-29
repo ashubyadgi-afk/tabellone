@@ -59,7 +59,7 @@ export default async function OwnerDashboardPage() {
           value={stats.activeAdSpaces}
           icon={Megaphone}
           accent="emerald"
-          href="/owner/imd/ad-spaces"
+          href="/owner/imd/ad-spaces?filter=active"
         />
         <StatCard
           label="Booked today"
