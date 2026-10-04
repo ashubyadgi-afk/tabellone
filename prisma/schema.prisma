@@ -151,6 +151,7 @@ model Organization {
   campaigns          Campaign[]
   bookingRequests    BookingRequest[]
   wishlistItems      WishlistItem[]
+  cartItems          CartItem[]
   wallet             Wallet?
   payments           Payment[]
   subscriptions      Subscription[]
@@ -242,6 +243,7 @@ model AdSpace {
   marketplaceListing MarketplaceListing?
   bookingRequests  BookingRequest[]
   wishlistItems    WishlistItem[]
+  cartItems        CartItem[]
 
   @@unique([organizationId, adSpaceNumber])
   @@map("ad_spaces")
@@ -387,6 +389,19 @@ model WishlistItem {
 
   @@unique([organizationId, adSpaceId])
   @@map("wishlist_items")
+}
+
+model CartItem {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  adSpaceId      String   @map("ad_space_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  adSpace      AdSpace      @relation(fields: [adSpaceId], references: [id])
+
+  @@unique([organizationId, adSpaceId])
+  @@map("cart_items")
 }
 
 model PricingConfig {

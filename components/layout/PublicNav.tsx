@@ -1,9 +1,19 @@
 import Link from "next/link";
 import { getRoleHomePath, getSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
+import { CartNavLink } from "@/components/marketplace/CartNavLink";
 
 export async function PublicNav() {
   const session = await getSession();
-  const dashboardHref = session ? getRoleHomePath(session.role) : null;
+  const advertiserOrgId =
+    session?.role === "advertiser" && session.organizationId ? session.organizationId : null;
+  const dashboardHref = session && !advertiserOrgId ? getRoleHomePath(session.role) : null;
+  const [wishlistCount, cartCount] = advertiserOrgId
+    ? await Promise.all([
+        prisma.wishlistItem.count({ where: { organizationId: advertiserOrgId } }),
+        prisma.cartItem.count({ where: { organizationId: advertiserOrgId } }),
+      ])
+    : [0, 0];
 
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-md" suppressHydrationWarning>
@@ -31,30 +41,50 @@ export async function PublicNav() {
           </a>
         </nav>
         <div className="flex items-center gap-3 text-sm">
-          {dashboardHref ? (
-            <Link
-              href={dashboardHref}
-              className="font-medium text-slate-600 hover:text-[#4C4BFF]"
-            >
-              Dashboard
-            </Link>
+          {advertiserOrgId ? (
+            <>
+              <Link
+                href="/advertiser/wishlist"
+                className="font-medium text-slate-600 hover:text-[#4C4BFF]"
+              >
+                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
+              </Link>
+              <CartNavLink initialCount={cartCount} />
+              <Link
+                href="/advertiser/booking-requests"
+                className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
+              >
+                Bookings
+              </Link>
+            </>
           ) : (
-            <Link href="/login" className="font-medium text-slate-600 hover:text-[#4C4BFF]">
-              Sign in
-            </Link>
+            <>
+              {dashboardHref ? (
+                <Link
+                  href={dashboardHref}
+                  className="font-medium text-slate-600 hover:text-[#4C4BFF]"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <Link href="/login" className="font-medium text-slate-600 hover:text-[#4C4BFF]">
+                  Sign in
+                </Link>
+              )}
+              <Link
+                href="/register/advertiser"
+                className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
+              >
+                Advertise
+              </Link>
+              <Link
+                href="/register/owner"
+                className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
+              >
+                List spaces
+              </Link>
+            </>
           )}
-          <Link
-            href="/register/advertiser"
-            className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
-          >
-            Advertise
-          </Link>
-          <Link
-            href="/register/owner"
-            className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
-          >
-            List spaces
-          </Link>
         </div>
       </div>
     </header>
