@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getRoleHomePath, getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { CartNavLink } from "@/components/marketplace/CartNavLink";
 
 export async function PublicNav() {
   const session = await getSession();
@@ -48,12 +49,7 @@ export async function PublicNav() {
               >
                 Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
               </Link>
-              <Link
-                href="/advertiser/cart"
-                className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
-              >
-                Cart{cartCount > 0 ? ` (${cartCount})` : ""}
-              </Link>
+              <CartNavLink initialCount={cartCount} />
               <Link
                 href="/advertiser/booking-requests"
                 className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"

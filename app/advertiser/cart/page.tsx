@@ -25,11 +25,15 @@ export default function AdvertiserCartPage() {
   }, []);
 
   async function remove(adSpaceId: string) {
-    await fetch("/api/v1/advertiser/cart", {
+    const response = await fetch("/api/v1/advertiser/cart", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ adSpaceId }),
     });
+    const data = await response.json().catch(() => null);
+    if (typeof data?.count === "number") {
+      window.dispatchEvent(new CustomEvent("tabellone-cart-count", { detail: data.count }));
+    }
     setItems((prev) => prev.filter((item) => item.adSpace.id !== adSpaceId));
   }
 

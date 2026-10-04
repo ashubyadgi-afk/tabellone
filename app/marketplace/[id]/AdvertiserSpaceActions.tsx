@@ -29,9 +29,13 @@ export function AdvertiserSpaceActions({
       body: JSON.stringify({ adSpaceId }),
     });
     setBusy(null);
+    const data = await response.json().catch(() => null);
     if (!response.ok) {
       setMessage("Could not save this space.");
       return;
+    }
+    if (kind === "cart" && typeof data?.count === "number") {
+      window.dispatchEvent(new CustomEvent("tabellone-cart-count", { detail: data.count }));
     }
     setMessage(kind === "cart" ? "Added to cart." : "Saved to wishlist.");
   }
