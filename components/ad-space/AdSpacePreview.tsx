@@ -117,7 +117,7 @@ export function AdSpacePreview({ values }: { values: AdSpacePreviewValues }) {
             </p>
             <p className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 shrink-0" />
-              {values.peakHours.trim() || "Peak hours"}
+              {values.peakHours.trim() || "Peak traffic"}
             </p>
           </div>
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
 import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
+import { PeakTrafficField } from "@/components/ad-space/PeakTrafficField";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
 import { StateCityFields } from "@/components/ad-space/StateCityFields";
 import { normalizePhotoUrls } from "@/lib/ad-space-photos";
@@ -42,6 +43,7 @@ export default function NewAdSpacePage() {
   });
   const [photos, setPhotos] = useState<string[]>(["", "", ""]);
   const [photoError, setPhotoError] = useState("");
+  const [peakTrafficInvalid, setPeakTrafficInvalid] = useState(false);
 
   async function submit(asDraft: boolean) {
     setError("");
@@ -58,7 +60,10 @@ export default function NewAdSpacePage() {
     if (dimensionsRequired && !dimensions) {
       setError("Width and height are required.");
     }
-    if (!photos[0] || (dimensionsRequired && !dimensions)) {
+    if (peakTrafficInvalid && !(dimensionsRequired && !dimensions)) {
+      setError("To time must be after From.");
+    }
+    if (!photos[0] || (dimensionsRequired && !dimensions) || peakTrafficInvalid) {
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
@@ -237,10 +242,10 @@ export default function NewAdSpacePage() {
               />
             </div>
           </div>
-          <div>
-            <Label>Peak hours</Label>
-            <Input value={form.peakHours} onChange={(e) => setForm({ ...form, peakHours: e.target.value })} placeholder="6–9 PM" />
-          </div>
+          <PeakTrafficField
+            onChange={(peakHours) => setForm({ ...form, peakHours })}
+            onInvalidChange={setPeakTrafficInvalid}
+          />
           <div>
             <Label>Notes</Label>
             <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
