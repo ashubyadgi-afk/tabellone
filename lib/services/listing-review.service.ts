@@ -30,6 +30,9 @@ export async function submitAdSpaceForReview(adSpace: ReviewableAdSpace) {
       title: adSpace.name,
       status: "submitted",
       submittedAt: new Date(),
+      reviewNotes: null,
+      reviewedAt: null,
+      reviewedById: null,
     },
   });
 

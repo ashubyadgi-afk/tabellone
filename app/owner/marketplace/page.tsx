@@ -15,6 +15,7 @@ type Listing = {
   id: string;
   status: string;
   adSpaceId: string;
+  reviewNotes: string | null;
 };
 
 export default function OwnerMarketplacePage() {
@@ -44,8 +45,8 @@ export default function OwnerMarketplacePage() {
     setLoading(null);
   }
 
-  function getListingStatus(adSpaceId: string) {
-    return listings.find((l) => l.adSpaceId === adSpaceId)?.status;
+  function getListing(adSpaceId: string) {
+    return listings.find((l) => l.adSpaceId === adSpaceId);
   }
 
   return (
@@ -56,7 +57,10 @@ export default function OwnerMarketplacePage() {
       />
       <div className="space-y-4">
         {adSpaces.map((space) => {
-          const status = getListingStatus(space.id);
+          const listing = getListing(space.id);
+          const status = listing?.status;
+          const reviewNotes =
+            status === "approved" || status === "rejected" ? listing?.reviewNotes : null;
           return (
             <div
               key={space.id}
@@ -82,6 +86,12 @@ export default function OwnerMarketplacePage() {
                     >
                       Listing: {status}
                     </Badge>
+                    {reviewNotes ? (
+                      <p className="mt-2 text-sm text-slate-600">
+                        <span className="font-medium text-slate-700">Reason: </span>
+                        {reviewNotes}
+                      </p>
+                    ) : null}
                   </div>
                 )}
               </div>

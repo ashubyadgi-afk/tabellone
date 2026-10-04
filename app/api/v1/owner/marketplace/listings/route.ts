@@ -45,6 +45,9 @@ export async function POST(request: Request) {
       documentNotes: body.documentNotes,
       status: "submitted",
       submittedAt: new Date(),
+      reviewNotes: null,
+      reviewedAt: null,
+      reviewedById: null,
     },
   });
 

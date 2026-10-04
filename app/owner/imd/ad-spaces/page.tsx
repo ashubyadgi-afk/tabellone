@@ -137,6 +137,29 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
                       <Badge variant={a.imdStatus === "active" ? "success" : "muted"}>
                         {IMD_STATUS_LABELS[a.imdStatus]}
                       </Badge>
+                      {a.marketplaceListing ? (
+                        <div className="mt-2">
+                          <Badge
+                            variant={
+                              a.marketplaceListing.status === "approved"
+                                ? "success"
+                                : a.marketplaceListing.status === "rejected"
+                                  ? "warning"
+                                  : "muted"
+                            }
+                          >
+                            Listing: {a.marketplaceListing.status.replaceAll("_", " ")}
+                          </Badge>
+                          {a.marketplaceListing.reviewNotes &&
+                          (a.marketplaceListing.status === "approved" ||
+                            a.marketplaceListing.status === "rejected") ? (
+                            <p className="mt-2 max-w-xs text-sm text-slate-600">
+                              <span className="font-medium text-slate-700">Reason: </span>
+                              {a.marketplaceListing.reviewNotes}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       {a.basePrice ? formatCurrency(a.basePrice) : "—"}

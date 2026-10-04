@@ -28,6 +28,8 @@ export default function AdminListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/v1/admin/listings")
@@ -39,16 +41,28 @@ export default function AdminListingsPage() {
   }, []);
 
   async function review(id: string, action: "approve" | "reject") {
+    const reason = (reasons[id] || "").trim();
+    if (!reason) {
+      setErrors((prev) => ({ ...prev, [id]: "Reason is required." }));
+      return;
+    }
+    setErrors((prev) => ({ ...prev, [id]: "" }));
     setBusyId(id);
     const response = await fetch("/api/v1/admin/listings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
+      body: JSON.stringify({ id, action, reviewNotes: reason }),
     });
     setBusyId(null);
     if (response.ok) {
       setListings((prev) => prev.filter((l) => l.id !== id));
+      return;
     }
+    const data = await response.json().catch(() => null);
+    setErrors((prev) => ({
+      ...prev,
+      [id]: data?.error?.message || "Could not save this review.",
+    }));
   }
 
   return (
@@ -105,22 +119,43 @@ export default function AdminListingsPage() {
                     <Badge variant="warning">{listing.status.replaceAll("_", " ")}</Badge>
                   </div>
                 </div>
-                <div className="flex gap-2 sm:flex-col">
-                  <Button
-                    size="sm"
-                    disabled={busyId === listing.id}
-                    onClick={() => review(listing.id, "approve")}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    disabled={busyId === listing.id}
-                    onClick={() => review(listing.id, "reject")}
-                  >
-                    Reject
-                  </Button>
+                <div className="w-full shrink-0 sm:w-64">
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Reason
+                  </label>
+                  <textarea
+                    value={reasons[listing.id] || ""}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setReasons((prev) => ({ ...prev, [listing.id]: value }));
+                      if (value.trim()) {
+                        setErrors((prev) => ({ ...prev, [listing.id]: "" }));
+                      }
+                    }}
+                    rows={3}
+                    placeholder="Why are you approving or rejecting this ad?"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[#1e3a5f] focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/15"
+                  />
+                  {errors[listing.id] ? (
+                    <p className="mt-1 text-sm text-red-600">{errors[listing.id]}</p>
+                  ) : null}
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      disabled={busyId === listing.id}
+                      onClick={() => review(listing.id, "approve")}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      disabled={busyId === listing.id}
+                      onClick={() => review(listing.id, "reject")}
+                    >
+                      Reject
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
