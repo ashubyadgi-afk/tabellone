@@ -187,7 +187,6 @@ export async function listOwnerAdSpaces(
     orderBy: { createdAt: "desc" },
     include: {
       bookings: { where: { status: { in: ["confirmed", "active"] } } },
-      marketplaceListing: { select: { status: true, reviewNotes: true } },
     },
   });
 
