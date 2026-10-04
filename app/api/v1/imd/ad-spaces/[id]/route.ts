@@ -7,6 +7,7 @@ import {
   isAllowedAdSpacePhotoUrl,
 } from "@/lib/ad-space-photos";
 import { parseDimensions, requiresAdSpaceDimensions } from "@/lib/marketplace/search";
+import { submitAdSpaceForReview } from "@/lib/services/listing-review.service";
 
 const storedPhotoUrl = z.string().min(1);
 
@@ -136,6 +137,9 @@ export async function PATCH(
         availableTo: availableTo ? new Date(availableTo) : null,
       },
     });
+    if (adSpace.imdStatus !== "draft") {
+      await submitAdSpaceForReview(adSpace);
+    }
     return NextResponse.json(adSpace);
   } catch {
     return NextResponse.json(
