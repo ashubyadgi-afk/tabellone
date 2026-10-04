@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Label, Select } from "@/components/ui";
 
 const HOURS = Array.from({ length: 12 }, (_, index) => String(index + 1));
-const MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
+const MINUTES = ["00", "15", "30", "45"];
 
 type Period = "" | "AM" | "PM";
 
@@ -117,7 +117,7 @@ export function PeakTrafficField({
     <div>
       <Label>Peak traffic</Label>
       <p className="mb-2 text-xs text-slate-500">
-        Choose the hour, minutes in steps of 5, and AM or PM
+        Choose the hour, minutes in steps of 15, and AM or PM
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <ClockSelects
