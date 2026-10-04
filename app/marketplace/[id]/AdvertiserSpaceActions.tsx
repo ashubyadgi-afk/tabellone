@@ -8,12 +8,15 @@ import { Button } from "@/components/ui";
 export function AdvertiserSpaceActions({
   adSpaceId,
   signedIn,
+  inCart: alreadyInCart = false,
 }: {
   adSpaceId: string;
   signedIn: boolean;
+  inCart?: boolean;
 }) {
   const router = useRouter();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(alreadyInCart ? "Added to cart." : "");
+  const [inCart, setInCart] = useState(alreadyInCart);
   const [busy, setBusy] = useState<"wishlist" | "cart" | null>(null);
 
   async function save(kind: "wishlist" | "cart") {
@@ -35,6 +38,7 @@ export function AdvertiserSpaceActions({
       return;
     }
     if (kind === "cart" && typeof data?.count === "number") {
+      setInCart(true);
       window.dispatchEvent(new CustomEvent("tabellone-cart-count", { detail: data.count }));
     }
     setMessage(kind === "cart" ? "Added to cart." : "Saved to wishlist.");
@@ -51,8 +55,13 @@ export function AdvertiserSpaceActions({
         >
           {busy === "wishlist" ? "Saving…" : "Wishlist"}
         </Button>
-        <Button type="button" disabled={busy !== null} onClick={() => save("cart")}>
-          {busy === "cart" ? "Adding…" : "Add to cart"}
+        <Button
+          type="button"
+          variant={inCart ? "secondary" : "primary"}
+          disabled={busy !== null || inCart}
+          onClick={() => save("cart")}
+        >
+          {busy === "cart" ? "Adding…" : inCart ? "Added to cart" : "Add to cart"}
         </Button>
       </div>
       {message ? <p className="text-sm text-slate-600">{message}</p> : null}

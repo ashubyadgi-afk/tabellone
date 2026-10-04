@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { getSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
@@ -30,9 +32,21 @@ type PageProps = {
 
 export default async function MarketplacePage({ searchParams }: PageProps) {
   const params = await searchParams;
+  const session = await getSession();
   const filters = marketplaceFiltersFromParams(params);
   const spaces = await listPublicAdSpaces(filters);
   const priced = await pricePublicListings(spaces);
+  const cartIds =
+    session?.role === "advertiser" && session.organizationId
+      ? new Set(
+          (
+            await prisma.cartItem.findMany({
+              where: { organizationId: session.organizationId },
+              select: { adSpaceId: true },
+            })
+          ).map((item) => item.adSpaceId)
+        )
+      : new Set<string>();
 
   const searched = Boolean(
     params.view === "results" ||
@@ -129,6 +143,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
                     key={space.id}
                     space={space}
                     customerPrice={customerPrice}
+                    inCart={cartIds.has(space.id)}
                   />
                 ))}
               </div>

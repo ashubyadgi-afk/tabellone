@@ -27,9 +27,10 @@ type AdSpaceCardProps = {
     organization?: { name: string; brandName?: string | null };
   };
   customerPrice?: number | null;
+  inCart?: boolean;
 };
 
-export function AdSpaceCard({ space, customerPrice }: AdSpaceCardProps) {
+export function AdSpaceCard({ space, customerPrice, inCart = false }: AdSpaceCardProps) {
   const price = customerPrice ?? space.basePrice;
   const cover = adSpacePhotos(space)[0];
 
@@ -52,6 +53,11 @@ export function AdSpaceCard({ space, customerPrice }: AdSpaceCardProps) {
               </span>
             </div>
           )}
+          {inCart ? (
+            <span className="absolute left-3 top-3 rounded-full bg-[#4C4BFF] px-2.5 py-1 text-xs font-semibold text-white">
+              Added to cart
+            </span>
+          ) : null}
         </div>
         <div className="p-5">
           <div className="flex items-start justify-between gap-2">
