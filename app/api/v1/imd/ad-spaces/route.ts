@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { isStoredAdSpacePhotoUrl } from "@/lib/ad-space-photos";
 import { parseDimensions, requiresAdSpaceDimensions } from "@/lib/marketplace/search";
+import { submitAdSpaceForReview } from "@/lib/services/listing-review.service";
 
 const storedPhotoUrl = z
   .string()
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
         availableTo: availableTo ? new Date(availableTo) : undefined,
       },
     });
+    await submitAdSpaceForReview(adSpace);
     return NextResponse.json(adSpace, { status: 201 });
   } catch {
     return NextResponse.json({ error: { message: "Ad space number already exists" } }, { status: 409 });

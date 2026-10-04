@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireApiRole, unauthorized } from "@/lib/api/auth-guard";
 import { createNotification } from "@/lib/services/notification.service";
+import { queueAdSpacesAwaitingReview } from "@/lib/services/listing-review.service";
 import { apiError } from "@/lib/api/errors";
 
 export async function GET() {
   const session = await requireApiRole(["admin"]);
   if (!session) return unauthorized();
+
+  await queueAdSpacesAwaitingReview();
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { status: { in: ["submitted", "under_review"] } },
@@ -44,12 +47,12 @@ export async function PATCH(request: Request) {
       },
     });
 
-    if (action === "approve") {
-      await tx.adSpace.update({
-        where: { id: listing.adSpaceId },
-        data: { marketplaceListingStatus: "listed" },
-      });
-    }
+    await tx.adSpace.update({
+      where: { id: listing.adSpaceId },
+      data: {
+        marketplaceListingStatus: action === "approve" ? "listed" : "not_listed",
+      },
+    });
 
     return l;
   });
