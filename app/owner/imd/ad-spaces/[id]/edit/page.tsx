@@ -12,6 +12,7 @@ import {
   AD_SPACE_TYPES,
   formatDimensions,
   parseDimensions,
+  requiresAdSpaceDimensions,
   type DimensionUnit,
 } from "@/lib/marketplace/search";
 
@@ -87,19 +88,24 @@ export default function EditAdSpacePage() {
   }, [id]);
 
   async function submit(asDraft: boolean) {
+    setError("");
+    setPhotoError("");
     if (!form.adSpaceNumber.trim() || !form.name.trim()) {
       setError("Ad Space number and Name are required.");
       return;
     }
+    const dimensions = formatDimensions(form.width, form.height, form.unit);
     if (!asDraft && !photos[0]) {
       setPhotoError("Upload a cover photo before saving.");
+    }
+    if (requiresAdSpaceDimensions(form.adSpaceType) && !dimensions) {
+      setError("Width and height are required.");
+    }
+    if ((!asDraft && !photos[0]) || (requiresAdSpaceDimensions(form.adSpaceType) && !dimensions)) {
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
-    const dimensions = formatDimensions(form.width, form.height, form.unit);
     setLoading(asDraft ? "draft" : "save");
-    setError("");
-    setPhotoError("");
     const { width: _w, height: _h, unit: _u, ...rest } = form;
     const res = await fetch(`/api/v1/imd/ad-spaces/${id}`, {
       method: "PATCH",
@@ -218,11 +224,15 @@ export default function EditAdSpacePage() {
               onClear={() => setForm({ ...form, latitude: "", longitude: "" })}
             />
             <div>
-              <Label>Dimensions</Label>
-              <p className="mb-2 text-xs text-slate-500">Billboard face size</p>
+              <Label>Dimensions{requiresAdSpaceDimensions(form.adSpaceType) ? " *" : ""}</Label>
+              <p className="mb-2 text-xs text-slate-500">
+                {requiresAdSpaceDimensions(form.adSpaceType)
+                  ? "Width and height are required for this category."
+                  : "Optional for vehicle ads."}
+              </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
-                  <Label>Width</Label>
+                  <Label>Width{requiresAdSpaceDimensions(form.adSpaceType) ? " *" : ""}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -230,10 +240,11 @@ export default function EditAdSpacePage() {
                     value={form.width}
                     onChange={(e) => setForm({ ...form, width: e.target.value })}
                     placeholder={form.unit === "ft" ? "20" : "6"}
+                    required={requiresAdSpaceDimensions(form.adSpaceType)}
                   />
                 </div>
                 <div>
-                  <Label>Height</Label>
+                  <Label>Height{requiresAdSpaceDimensions(form.adSpaceType) ? " *" : ""}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -241,6 +252,7 @@ export default function EditAdSpacePage() {
                     value={form.height}
                     onChange={(e) => setForm({ ...form, height: e.target.value })}
                     placeholder={form.unit === "ft" ? "10" : "3"}
+                    required={requiresAdSpaceDimensions(form.adSpaceType)}
                   />
                 </div>
                 <div>

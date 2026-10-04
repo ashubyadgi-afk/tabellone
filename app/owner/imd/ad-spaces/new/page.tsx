@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
+import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
 import { StateCityFields } from "@/components/ad-space/StateCityFields";
 import { normalizePhotoUrls } from "@/lib/ad-space-photos";
 import {
   AD_SPACE_TYPES,
   formatDimensions,
+  requiresAdSpaceDimensions,
   type DimensionUnit,
 } from "@/lib/marketplace/search";
 
@@ -42,19 +44,25 @@ export default function NewAdSpacePage() {
   const [photoError, setPhotoError] = useState("");
 
   async function submit(asDraft: boolean) {
+    setError("");
+    setPhotoError("");
     if (!form.adSpaceNumber.trim() || !form.name.trim()) {
       setError("Ad Space number and Name are required.");
       return;
     }
-    if (!asDraft && !photos[0]) {
-      setPhotoError("Upload a cover photo before saving.");
+    const dimensionsRequired = requiresAdSpaceDimensions(form.adSpaceType);
+    const dimensions = formatDimensions(form.width, form.height, form.unit);
+    if (!photos[0]) {
+      setPhotoError("Cover photo is required.");
+    }
+    if (dimensionsRequired && !dimensions) {
+      setError("Width and height are required.");
+    }
+    if (!photos[0] || (dimensionsRequired && !dimensions)) {
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
-    const dimensions = formatDimensions(form.width, form.height, form.unit);
     setLoading(asDraft ? "draft" : "save");
-    setError("");
-    setPhotoError("");
     const { width: _w, height: _h, unit: _u, ...rest } = form;
     const res = await fetch("/api/v1/imd/ad-spaces", {
       method: "POST",
@@ -80,6 +88,8 @@ export default function NewAdSpacePage() {
     router.refresh();
   }
 
+  const dimensions = formatDimensions(form.width, form.height, form.unit);
+
   return (
     <div>
       <PageHeader title="New Ad Space" description="Add inventory to IMD" />
@@ -88,7 +98,8 @@ export default function NewAdSpacePage() {
           {error}
         </div>
       )}
-      <Card className="max-w-2xl p-6">
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)]">
+      <Card className="p-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -138,7 +149,6 @@ export default function NewAdSpacePage() {
           </div>
           <PhotoUploader
             urls={photos}
-            coverRequired={false}
             error={photoError}
             onChange={(next) => {
               setPhotos(next);
@@ -154,11 +164,15 @@ export default function NewAdSpacePage() {
             onClear={() => setForm({ ...form, latitude: "", longitude: "" })}
           />
           <div>
-            <Label>Dimensions</Label>
-            <p className="mb-2 text-xs text-slate-500">Billboard face size</p>
+            <Label>Dimensions{requiresAdSpaceDimensions(form.adSpaceType) ? " *" : ""}</Label>
+            <p className="mb-2 text-xs text-slate-500">
+              {requiresAdSpaceDimensions(form.adSpaceType)
+                ? "Width and height are required for this category."
+                : "Optional for vehicle ads."}
+            </p>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <Label>Width</Label>
+                <Label>Width{requiresAdSpaceDimensions(form.adSpaceType) ? " *" : ""}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -166,10 +180,11 @@ export default function NewAdSpacePage() {
                   value={form.width}
                   onChange={(e) => setForm({ ...form, width: e.target.value })}
                   placeholder={form.unit === "ft" ? "20" : "6"}
+                  required={requiresAdSpaceDimensions(form.adSpaceType)}
                 />
               </div>
               <div>
-                <Label>Height</Label>
+                <Label>Height{requiresAdSpaceDimensions(form.adSpaceType) ? " *" : ""}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -177,6 +192,7 @@ export default function NewAdSpacePage() {
                   value={form.height}
                   onChange={(e) => setForm({ ...form, height: e.target.value })}
                   placeholder={form.unit === "ft" ? "10" : "3"}
+                  required={requiresAdSpaceDimensions(form.adSpaceType)}
                 />
               </div>
               <div>
@@ -249,6 +265,16 @@ export default function NewAdSpacePage() {
           </div>
         </form>
       </Card>
+      <aside className="lg:sticky lg:top-24">
+        <AdSpacePreview
+          values={{
+            ...form,
+            dimensions: dimensions ?? "",
+            photos,
+          }}
+        />
+      </aside>
+      </div>
     </div>
   );
 }

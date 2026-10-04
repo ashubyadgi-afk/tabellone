@@ -13,6 +13,11 @@ export function adSpaceTypeLabel(value: string | null | undefined): string {
   return match?.label ?? value;
 }
 
+/** Vehicle ads do not have a fixed face size. Every other category does. */
+export function requiresAdSpaceDimensions(adSpaceType: string | null | undefined): boolean {
+  return adSpaceType !== "vehicle";
+}
+
 export const AD_SPACE_LOCATIONS = [
   { value: "Bangalore", label: "Bangalore" },
   { value: "Hubli", label: "Hubli" },

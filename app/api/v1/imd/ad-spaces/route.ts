@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { isStoredAdSpacePhotoUrl } from "@/lib/ad-space-photos";
+import { parseDimensions, requiresAdSpaceDimensions } from "@/lib/marketplace/search";
 
 const storedPhotoUrl = z
   .string()
@@ -38,11 +39,18 @@ const schema = z
       .default("active"),
   })
   .superRefine((data, ctx) => {
-    if (data.imdStatus !== "draft" && data.photoUrls.length < 1) {
+    if (data.photoUrls.length < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Cover photo is required",
         path: ["photoUrls"],
+      });
+    }
+    if (requiresAdSpaceDimensions(data.adSpaceType) && !parseDimensions(data.dimensions)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Width and height are required",
+        path: ["dimensions"],
       });
     }
   });

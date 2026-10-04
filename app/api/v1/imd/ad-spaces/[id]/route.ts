@@ -6,6 +6,7 @@ import {
   adSpacePhotos,
   isAllowedAdSpacePhotoUrl,
 } from "@/lib/ad-space-photos";
+import { parseDimensions, requiresAdSpaceDimensions } from "@/lib/marketplace/search";
 
 const storedPhotoUrl = z.string().min(1);
 
@@ -99,6 +100,16 @@ export async function PATCH(
     );
   }
 
+  if (
+    requiresAdSpaceDimensions(parsed.data.adSpaceType) &&
+    !parseDimensions(parsed.data.dimensions)
+  ) {
+    return NextResponse.json(
+      { error: { message: "Width and height are required" } },
+      { status: 400 }
+    );
+  }
+
   const nextStatus = parsed.data.imdStatus ?? existing.imdStatus;
   if (nextStatus !== "draft" && photoUrls.length < 1) {
     return NextResponse.json(
@@ -130,6 +141,56 @@ export async function PATCH(
     return NextResponse.json(
       { error: { message: "Ad space number already exists" } },
       { status: 409 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getSession();
+  if (!session?.organizationId) {
+    return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const existing = await getOwned(id, session.organizationId);
+  if (!existing) {
+    return NextResponse.json({ error: { message: "Not found" } }, { status: 404 });
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const requests = await tx.bookingRequest.findMany({
+        where: { adSpaceId: id },
+        select: { id: true },
+      });
+      const requestIds = requests.map((request) => request.id);
+      if (requestIds.length > 0) {
+        await tx.payment.deleteMany({ where: { bookingRequestId: { in: requestIds } } });
+        await tx.bookingRequest.deleteMany({ where: { adSpaceId: id } });
+      }
+
+      const bookings = await tx.booking.findMany({
+        where: { adSpaceId: id },
+        select: { id: true },
+      });
+      const bookingIds = bookings.map((booking) => booking.id);
+      if (bookingIds.length > 0) {
+        await tx.invoice.deleteMany({ where: { bookingId: { in: bookingIds } } });
+        await tx.booking.deleteMany({ where: { adSpaceId: id } });
+      }
+
+      await tx.wishlistItem.deleteMany({ where: { adSpaceId: id } });
+      await tx.marketplaceListing.deleteMany({ where: { adSpaceId: id } });
+      await tx.adSpace.delete({ where: { id } });
+    });
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json(
+      { error: { message: "Could not delete this ad space." } },
+      { status: 500 }
     );
   }
 }
