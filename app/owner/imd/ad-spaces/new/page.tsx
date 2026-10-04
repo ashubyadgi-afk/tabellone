@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
+import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
 import { StateCityFields } from "@/components/ad-space/StateCityFields";
 import { normalizePhotoUrls } from "@/lib/ad-space-photos";
@@ -46,8 +47,8 @@ export default function NewAdSpacePage() {
       setError("Ad Space number and Name are required.");
       return;
     }
-    if (!asDraft && !photos[0]) {
-      setPhotoError("Upload a cover photo before saving.");
+    if (!photos[0]) {
+      setPhotoError("Cover photo is required.");
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
@@ -80,6 +81,8 @@ export default function NewAdSpacePage() {
     router.refresh();
   }
 
+  const dimensions = formatDimensions(form.width, form.height, form.unit);
+
   return (
     <div>
       <PageHeader title="New Ad Space" description="Add inventory to IMD" />
@@ -88,7 +91,8 @@ export default function NewAdSpacePage() {
           {error}
         </div>
       )}
-      <Card className="w-[min(60vw,100%)] p-6">
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)]">
+      <Card className="p-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -138,7 +142,6 @@ export default function NewAdSpacePage() {
           </div>
           <PhotoUploader
             urls={photos}
-            coverRequired={false}
             error={photoError}
             onChange={(next) => {
               setPhotos(next);
@@ -249,6 +252,16 @@ export default function NewAdSpacePage() {
           </div>
         </form>
       </Card>
+      <aside className="lg:sticky lg:top-24">
+        <AdSpacePreview
+          values={{
+            ...form,
+            dimensions: dimensions ?? "",
+            photos,
+          }}
+        />
+      </aside>
+      </div>
     </div>
   );
 }

@@ -38,7 +38,7 @@ const schema = z
       .default("active"),
   })
   .superRefine((data, ctx) => {
-    if (data.imdStatus !== "draft" && data.photoUrls.length < 1) {
+    if (data.photoUrls.length < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Cover photo is required",
