@@ -10,6 +10,7 @@ import {
 } from "@/lib/services/imd.service";
 import { PageHeader, Button, Card, Badge } from "@/components/ui";
 import { Plus, Pencil } from "lucide-react";
+import { DeleteAdSpaceButton } from "@/components/ad-space/DeleteAdSpaceButton";
 import { formatCurrency, cn } from "@/lib/utils";
 import { adSpacePhotos } from "@/lib/ad-space-photos";
 import { adSpaceTypeLabel } from "@/lib/marketplace/search";
@@ -142,13 +143,16 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-6 py-4 text-slate-600">{a.bookings.length}</td>
                     <td className="px-6 py-4 text-right">
-                      <Link
-                        href={`/owner/imd/ad-spaces/${a.id}/edit`}
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1e3a5f] hover:underline"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </Link>
+                      <div className="inline-flex items-center justify-end gap-4">
+                        <Link
+                          href={`/owner/imd/ad-spaces/${a.id}/edit`}
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1e3a5f] hover:underline"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </Link>
+                        <DeleteAdSpaceButton id={a.id} />
+                      </div>
                     </td>
                   </tr>
                 );
