@@ -14,7 +14,9 @@ export async function submitAdSpaceForReview(adSpace: ReviewableAdSpace) {
   const existing = await prisma.marketplaceListing.findUnique({
     where: { adSpaceId: adSpace.id },
   });
-  if (existing && existing.status !== "draft") return existing;
+  if (existing && existing.status !== "draft" && existing.status !== "rejected") {
+    return existing;
+  }
 
   const listing = await prisma.marketplaceListing.upsert({
     where: { adSpaceId: adSpace.id },
