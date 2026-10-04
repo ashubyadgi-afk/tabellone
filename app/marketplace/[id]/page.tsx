@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getSession } from "@/lib/auth/session";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
 import { getPublicAdSpace } from "@/lib/services/marketplace.service";
@@ -9,6 +10,7 @@ import { availabilityLabel } from "@/lib/marketplace/search";
 import { SeePropertyOnMap } from "@/components/map/SeePropertyOnMap";
 import { PhotoGallery } from "@/components/ad-space/PhotoGallery";
 import { BookAdSpaceForm } from "./BookAdSpaceForm";
+import { AdvertiserSpaceActions } from "./AdvertiserSpaceActions";
 import { adSpacePhotos } from "@/lib/ad-space-photos";
 
 export default async function AdSpaceDetailPage({
@@ -17,6 +19,7 @@ export default async function AdSpaceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await getSession();
   const space = await getPublicAdSpace(id);
   if (!space) notFound();
 
@@ -130,7 +133,15 @@ export default async function AdSpaceDetailPage({
                 </div>
               </div>
             )}
-            <BookAdSpaceForm adSpaceId={space.id} customerPrice={pricing?.customerPrice} />
+            <BookAdSpaceForm
+              adSpaceId={space.id}
+              customerPrice={pricing?.customerPrice}
+              signedIn={session?.role === "advertiser"}
+            />
+            <AdvertiserSpaceActions
+              adSpaceId={space.id}
+              signedIn={session?.role === "advertiser"}
+            />
           </div>
         </div>
       </main>

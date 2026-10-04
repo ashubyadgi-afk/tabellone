@@ -9,9 +9,11 @@ import { formatCurrency } from "@/lib/utils";
 export function BookAdSpaceForm({
   adSpaceId,
   customerPrice,
+  signedIn = false,
 }: {
   adSpaceId: string;
   customerPrice?: number | null;
+  signedIn?: boolean;
 }) {
   const router = useRouter();
   const [startDate, setStartDate] = useState("");
@@ -95,11 +97,14 @@ export function BookAdSpaceForm({
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Submitting…" : "Submit booking request"}
       </Button>
-      <p className="text-xs text-slate-500 text-center">
-        <Link href="/register/advertiser" className="text-orange-600 hover:underline">
-          Create advertiser account
-        </Link> to book
-      </p>
+      {signedIn ? null : (
+        <p className="text-center text-xs text-slate-500">
+          <Link href="/register/advertiser" className="text-orange-600 hover:underline">
+            Create advertiser account
+          </Link>{" "}
+          to book
+        </p>
+      )}
     </form>
   );
 }

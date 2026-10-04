@@ -187,6 +187,7 @@ export async function DELETE(
       }
 
       await tx.wishlistItem.deleteMany({ where: { adSpaceId: id } });
+      await tx.cartItem.deleteMany({ where: { adSpaceId: id } });
       await tx.marketplaceListing.deleteMany({ where: { adSpaceId: id } });
       await tx.adSpace.delete({ where: { id } });
     });
