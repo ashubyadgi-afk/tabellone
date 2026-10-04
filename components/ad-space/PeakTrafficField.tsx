@@ -1,23 +1,82 @@
 "use client";
 
 import { useState } from "react";
-import { Input, Label } from "@/components/ui";
+import { Label, Select } from "@/components/ui";
 
-function formatClock(value: string): string {
-  const [hourText, minuteText] = value.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return "";
-  const period = hour >= 12 ? "PM" : "AM";
-  const hour12 = hour % 12 || 12;
-  return `${hour12}:${String(minute).padStart(2, "0")} ${period}`;
+const HOURS = Array.from({ length: 12 }, (_, index) => String(index + 1));
+const MINUTES = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
+
+type Period = "" | "AM" | "PM";
+
+type ClockParts = {
+  hour: string;
+  minute: string;
+  period: Period;
+};
+
+const EMPTY_CLOCK: ClockParts = { hour: "", minute: "", period: "" };
+
+function formatParts(parts: ClockParts): string {
+  if (!parts.hour || !parts.minute || !parts.period) return "";
+  return `${parts.hour}:${parts.minute} ${parts.period}`;
 }
 
-function peakTrafficLabel(from: string, to: string): string {
-  const start = formatClock(from);
-  const end = formatClock(to);
+function peakTrafficLabel(from: ClockParts, to: ClockParts): string {
+  const start = formatParts(from);
+  const end = formatParts(to);
   if (start && end) return `${start} – ${end}`;
   return start || end;
+}
+
+function ClockSelects({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: ClockParts;
+  onChange: (next: ClockParts) => void;
+}) {
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="grid grid-cols-3 gap-2">
+        <Select
+          aria-label={`${label} hour`}
+          value={value.hour}
+          onChange={(e) => onChange({ ...value, hour: e.target.value })}
+        >
+          <option value="">Hour</option>
+          {HOURS.map((hour) => (
+            <option key={hour} value={hour}>
+              {hour}
+            </option>
+          ))}
+        </Select>
+        <Select
+          aria-label={`${label} minutes`}
+          value={value.minute}
+          onChange={(e) => onChange({ ...value, minute: e.target.value })}
+        >
+          <option value="">Min</option>
+          {MINUTES.map((minute) => (
+            <option key={minute} value={minute}>
+              {minute}
+            </option>
+          ))}
+        </Select>
+        <Select
+          aria-label={`${label} AM or PM`}
+          value={value.period}
+          onChange={(e) => onChange({ ...value, period: e.target.value as Period })}
+        >
+          <option value="">AM/PM</option>
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </Select>
+      </div>
+    </div>
+  );
 }
 
 export function PeakTrafficField({
@@ -25,10 +84,10 @@ export function PeakTrafficField({
 }: {
   onChange: (value: string) => void;
 }) {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState<ClockParts>(EMPTY_CLOCK);
+  const [to, setTo] = useState<ClockParts>(EMPTY_CLOCK);
 
-  function update(nextFrom: string, nextTo: string) {
+  function update(nextFrom: ClockParts, nextTo: ClockParts) {
     setFrom(nextFrom);
     setTo(nextTo);
     onChange(peakTrafficLabel(nextFrom, nextTo));
@@ -38,25 +97,19 @@ export function PeakTrafficField({
     <div>
       <Label>Peak traffic</Label>
       <p className="mb-2 text-xs text-slate-500">
-        Use the clock to choose when traffic is highest
+        Choose the hour, minutes in steps of 5, and AM or PM
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <Label>From</Label>
-          <Input
-            type="time"
-            value={from}
-            onChange={(e) => update(e.target.value, to)}
-          />
-        </div>
-        <div>
-          <Label>To</Label>
-          <Input
-            type="time"
-            value={to}
-            onChange={(e) => update(from, e.target.value)}
-          />
-        </div>
+        <ClockSelects
+          label="From"
+          value={from}
+          onChange={(next) => update(next, to)}
+        />
+        <ClockSelects
+          label="To"
+          value={to}
+          onChange={(next) => update(from, next)}
+        />
       </div>
     </div>
   );
