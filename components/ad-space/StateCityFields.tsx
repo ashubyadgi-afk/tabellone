@@ -17,7 +17,8 @@ export function StateCityFields({ state, city, onChange }: StateCityFieldsProps)
   const cities = cityOptionsForSelect(state, city);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="@container">
+    <div className="grid gap-4 @md:grid-cols-2">
       <div>
         <Label>State</Label>
         <Select
@@ -50,6 +51,7 @@ export function StateCityFields({ state, city, onChange }: StateCityFieldsProps)
           ))}
         </Select>
       </div>
+    </div>
     </div>
   );
 }
