@@ -43,6 +43,7 @@ export default function NewAdSpacePage() {
   });
   const [photos, setPhotos] = useState<string[]>(["", "", ""]);
   const [photoError, setPhotoError] = useState("");
+  const [peakTrafficInvalid, setPeakTrafficInvalid] = useState(false);
 
   async function submit(asDraft: boolean) {
     setError("");
@@ -59,7 +60,10 @@ export default function NewAdSpacePage() {
     if (dimensionsRequired && !dimensions) {
       setError("Width and height are required.");
     }
-    if (!photos[0] || (dimensionsRequired && !dimensions)) {
+    if (peakTrafficInvalid && !(dimensionsRequired && !dimensions)) {
+      setError("To time must be after From.");
+    }
+    if (!photos[0] || (dimensionsRequired && !dimensions) || peakTrafficInvalid) {
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
@@ -240,6 +244,7 @@ export default function NewAdSpacePage() {
           </div>
           <PeakTrafficField
             onChange={(peakHours) => setForm({ ...form, peakHours })}
+            onInvalidChange={setPeakTrafficInvalid}
           />
           <div>
             <Label>Notes</Label>

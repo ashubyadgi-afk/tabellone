@@ -21,11 +21,25 @@ function formatParts(parts: ClockParts): string {
   return `${parts.hour}:${parts.minute} ${parts.period}`;
 }
 
+function minutesSinceMidnight(parts: ClockParts): number | null {
+  if (!parts.hour || !parts.minute || !parts.period) return null;
+  const hour12 = Number(parts.hour) % 12;
+  const hour = parts.period === "PM" ? hour12 + 12 : hour12;
+  return hour * 60 + Number(parts.minute);
+}
+
 function peakTrafficLabel(from: ClockParts, to: ClockParts): string {
   const start = formatParts(from);
   const end = formatParts(to);
   if (start && end) return `${start} – ${end}`;
   return start || end;
+}
+
+function rangeIsInvalid(from: ClockParts, to: ClockParts): boolean {
+  const start = minutesSinceMidnight(from);
+  const end = minutesSinceMidnight(to);
+  if (start == null || end == null) return false;
+  return end <= start;
 }
 
 function ClockSelects({
@@ -81,16 +95,22 @@ function ClockSelects({
 
 export function PeakTrafficField({
   onChange,
+  onInvalidChange,
 }: {
   onChange: (value: string) => void;
+  onInvalidChange?: (invalid: boolean) => void;
 }) {
   const [from, setFrom] = useState<ClockParts>(EMPTY_CLOCK);
   const [to, setTo] = useState<ClockParts>(EMPTY_CLOCK);
+  const [invalid, setInvalid] = useState(false);
 
   function update(nextFrom: ClockParts, nextTo: ClockParts) {
+    const nextInvalid = rangeIsInvalid(nextFrom, nextTo);
     setFrom(nextFrom);
     setTo(nextTo);
-    onChange(peakTrafficLabel(nextFrom, nextTo));
+    setInvalid(nextInvalid);
+    onInvalidChange?.(nextInvalid);
+    onChange(nextInvalid ? "" : peakTrafficLabel(nextFrom, nextTo));
   }
 
   return (
@@ -111,6 +131,9 @@ export function PeakTrafficField({
           onChange={(next) => update(from, next)}
         />
       </div>
+      {invalid ? (
+        <p className="mt-2 text-sm text-red-600">To time must be after From.</p>
+      ) : null}
     </div>
   );
 }
