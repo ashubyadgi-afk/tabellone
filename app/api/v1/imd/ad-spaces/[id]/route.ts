@@ -6,6 +6,7 @@ import {
   adSpacePhotos,
   isAllowedAdSpacePhotoUrl,
 } from "@/lib/ad-space-photos";
+import { parseDimensions, requiresAdSpaceDimensions } from "@/lib/marketplace/search";
 
 const storedPhotoUrl = z.string().min(1);
 
@@ -95,6 +96,16 @@ export async function PATCH(
   if (photoUrls.some((url) => !isAllowedAdSpacePhotoUrl(url, alreadyStored))) {
     return NextResponse.json(
       { error: { message: "Invalid photo URL" } },
+      { status: 400 }
+    );
+  }
+
+  if (
+    requiresAdSpaceDimensions(parsed.data.adSpaceType) &&
+    !parseDimensions(parsed.data.dimensions)
+  ) {
+    return NextResponse.json(
+      { error: { message: "Width and height are required" } },
       { status: 400 }
     );
   }
