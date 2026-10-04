@@ -77,8 +77,7 @@ export function PhotoUploader({
           : "Cover photo is required to activate. You can save as draft without photos."}{" "}
         JPG, PNG, WebP, GIF, or AVIF. Max 2 MB each.
       </p>
-      <div className="@container mt-3">
-      <div className="grid gap-3 @md:grid-cols-3">
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {SLOTS.map((slot, index) => (
           <PhotoSlot
             key={index}
@@ -96,7 +95,6 @@ export function PhotoUploader({
             }}
           />
         ))}
-      </div>
       </div>
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
     </div>

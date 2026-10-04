@@ -81,14 +81,14 @@ export default function NewAdSpacePage() {
   }
 
   return (
-    <div className="w-[min(60vw,100%)] min-w-0">
+    <div>
       <PageHeader title="New Ad Space" description="Add inventory to IMD" />
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
-      <Card className="w-full p-[clamp(1.25rem,2vw,2.5rem)]">
+      <Card className="w-[min(60vw,100%)] p-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -96,7 +96,7 @@ export default function NewAdSpacePage() {
           }}
           className="space-y-4"
         >
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Ad Space number *</Label>
               <Input value={form.adSpaceNumber} onChange={(e) => setForm({ ...form, adSpaceNumber: e.target.value })} required />
@@ -106,7 +106,7 @@ export default function NewAdSpacePage() {
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Category</Label>
               <Select value={form.adSpaceType} onChange={(e) => setForm({ ...form, adSpaceType: e.target.value })}>
@@ -156,7 +156,7 @@ export default function NewAdSpacePage() {
           <div>
             <Label>Dimensions</Label>
             <p className="mb-2 text-xs text-slate-500">Billboard face size</p>
-            <div className="grid gap-4 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <Label>Width</Label>
                 <Input
@@ -193,7 +193,7 @@ export default function NewAdSpacePage() {
               </div>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Base price (₹)</Label>
               <Input type="number" value={form.basePrice} onChange={(e) => setForm({ ...form, basePrice: e.target.value })} />
@@ -203,7 +203,7 @@ export default function NewAdSpacePage() {
               <Input type="number" value={form.footfall} onChange={(e) => setForm({ ...form, footfall: e.target.value })} />
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Available from</Label>
               <Input
