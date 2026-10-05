@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 
-type Option = { id: string; name: string };
+type Option = { id: string; name: string; basePrice?: number | null };
 
 const emptyClientForm = {
   name: "",
@@ -42,7 +42,13 @@ export function NewBookingForm({
 
   useEffect(() => {
     fetch("/api/v1/imd/ad-spaces").then((r) => r.json()).then((d) =>
-      setAdSpaces(d.items?.map((a: { id: string; name: string }) => ({ id: a.id, name: a.name })) || [])
+      setAdSpaces(
+        d.items?.map((a: { id: string; name: string; basePrice?: number | null }) => ({
+          id: a.id,
+          name: a.name,
+          basePrice: a.basePrice ?? null,
+        })) || []
+      )
     );
     fetch("/api/v1/imd/clients").then((r) => r.json()).then((d) =>
       setClients(d.items?.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })) || [])
@@ -91,6 +97,15 @@ export function NewBookingForm({
     setShowAddClient(false);
   }
 
+  function selectAdSpace(adSpaceId: string) {
+    const space = adSpaces.find((item) => item.id === adSpaceId);
+    setForm((prev) => ({
+      ...prev,
+      adSpaceId,
+      amount: space?.basePrice != null && space.basePrice > 0 ? String(space.basePrice) : "",
+    }));
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -123,7 +138,7 @@ export function NewBookingForm({
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label>Ad Space *</Label>
-            <Select value={form.adSpaceId} onChange={(e) => setForm({ ...form, adSpaceId: e.target.value })} required>
+            <Select value={form.adSpaceId} onChange={(e) => selectAdSpace(e.target.value)} required>
               <option value="">Select…</option>
               {adSpaces.map((a) => (
                 <option key={a.id} value={a.id}>{a.name}</option>
@@ -165,7 +180,14 @@ export function NewBookingForm({
           </div>
           <div>
             <Label>Amount (₹)</Label>
-            <Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            <Input
+              type="number"
+              min="0"
+              step="any"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              placeholder="Select an ad space"
+            />
           </div>
           <div>
             <Label>Campaign reference</Label>
