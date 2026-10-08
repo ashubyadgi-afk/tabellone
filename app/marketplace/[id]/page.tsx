@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
 import { getPublicAdSpace } from "@/lib/services/marketplace.service";
@@ -13,6 +12,7 @@ import { PhotoGallery } from "@/components/ad-space/PhotoGallery";
 import { BookAdSpaceForm } from "./BookAdSpaceForm";
 import { AdvertiserSpaceActions } from "./AdvertiserSpaceActions";
 import { adSpacePhotos } from "@/lib/ad-space-photos";
+import { isAdSpaceInCart } from "@/lib/services/cart.service";
 
 export default async function AdSpaceDetailPage({
   params,
@@ -26,16 +26,7 @@ export default async function AdSpaceDetailPage({
 
   const inCart =
     session?.role === "advertiser" && session.organizationId
-      ? Boolean(
-          await prisma.cartItem.findUnique({
-            where: {
-              organizationId_adSpaceId: {
-                organizationId: session.organizationId,
-                adSpaceId: space.id,
-              },
-            },
-          })
-        )
+      ? await isAdSpaceInCart(session.organizationId, space.id)
       : false;
 
   const pricing = space.basePrice

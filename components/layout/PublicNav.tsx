@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getRoleHomePath, getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { CartNavLink } from "@/components/marketplace/CartNavLink";
+import { countCartItems } from "@/lib/services/cart.service";
 
 export async function PublicNav() {
   const session = await getSession();
@@ -11,7 +12,7 @@ export async function PublicNav() {
   const [wishlistCount, cartCount] = advertiserOrgId
     ? await Promise.all([
         prisma.wishlistItem.count({ where: { organizationId: advertiserOrgId } }),
-        prisma.cartItem.count({ where: { organizationId: advertiserOrgId } }),
+        countCartItems(advertiserOrgId),
       ])
     : [0, 0];
 

@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
@@ -11,6 +10,7 @@ import {
   marketplaceFiltersFromParams,
 } from "@/lib/services/marketplace.service";
 import { pricePublicListings } from "@/lib/services/pricing.service";
+import { listCartAdSpaceIds } from "@/lib/services/cart.service";
 
 export const dynamic = "force-dynamic";
 
@@ -38,14 +38,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   const priced = await pricePublicListings(spaces);
   const cartIds =
     session?.role === "advertiser" && session.organizationId
-      ? new Set(
-          (
-            await prisma.cartItem.findMany({
-              where: { organizationId: session.organizationId },
-              select: { adSpaceId: true },
-            })
-          ).map((item) => item.adSpaceId)
-        )
+      ? new Set(await listCartAdSpaceIds(session.organizationId))
       : new Set<string>();
 
   const searched = Boolean(
