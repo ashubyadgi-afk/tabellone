@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Megaphone } from "lucide-react";
 import { Button, Input, Label } from "@/components/ui";
 
 export function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,13 +21,12 @@ export function LoginForm() {
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    setLoading(false);
     if (!res.ok) {
       setError(data.error?.message || "Login failed");
+      setLoading(false);
       return;
     }
-    router.push(data.redirect || "/");
-    router.refresh();
+    window.location.assign(data.redirect || "/");
   }
 
   return (

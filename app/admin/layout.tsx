@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getLiveSession, redirectToRoleArea } from "@/lib/auth/live-session";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 
 export default async function AdminLayout({
@@ -7,10 +6,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  if (!session || session.role !== "admin") {
-    redirect("/login");
-  }
+  const session = redirectToRoleArea(await getLiveSession(), "admin");
 
   return (
     <div className="flex min-h-screen bg-slate-100">
