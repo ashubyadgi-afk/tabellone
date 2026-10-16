@@ -18,13 +18,31 @@ export async function publicTableExists(tableName: string): Promise<boolean> {
     throw new Error(`publicTableExists: unknown table ${tableName}`);
   }
 
-  const rows = await prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+  const rows = await prisma.$queryRawUnsafe<Array<{ exists: boolean | string }>>(
     `SELECT EXISTS (
       SELECT 1 FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = '${tableName}'
     ) AS "exists"`
   );
-  return Boolean(rows[0]?.exists);
+  const value = rows[0]?.exists;
+  return value === true || value === "t" || value === "true";
+}
+
+/** Deletes related rows; no-ops when the table is missing in production. */
+export async function deleteCartItemsForAdSpace(adSpaceId: string): Promise<void> {
+  try {
+    await prisma.cartItem.deleteMany({ where: { adSpaceId } });
+  } catch (error) {
+    if (!isMissingCartTable(error)) throw error;
+  }
+}
+
+export async function deleteWishlistItemsForAdSpace(adSpaceId: string): Promise<void> {
+  try {
+    await prisma.wishlistItem.deleteMany({ where: { adSpaceId } });
+  } catch (error) {
+    if (!isMissingPrismaTable(error, "wishlist_items")) throw error;
+  }
 }
 
 export function isMissingPrismaTable(error: unknown, tableName?: string): boolean {
