@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
@@ -165,34 +166,46 @@ export async function DELETE(
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      const requests = await tx.bookingRequest.findMany({
-        where: { adSpaceId: id },
-        select: { id: true },
-      });
-      const requestIds = requests.map((request) => request.id);
-      if (requestIds.length > 0) {
-        await tx.payment.deleteMany({ where: { bookingRequestId: { in: requestIds } } });
-        await tx.bookingRequest.deleteMany({ where: { adSpaceId: id } });
-      }
-
-      const bookings = await tx.booking.findMany({
-        where: { adSpaceId: id },
-        select: { id: true },
-      });
-      const bookingIds = bookings.map((booking) => booking.id);
-      if (bookingIds.length > 0) {
-        await tx.invoice.deleteMany({ where: { bookingId: { in: bookingIds } } });
-        await tx.booking.deleteMany({ where: { adSpaceId: id } });
-      }
-
-      await tx.wishlistItem.deleteMany({ where: { adSpaceId: id } });
-      await tx.cartItem.deleteMany({ where: { adSpaceId: id } });
-      await tx.marketplaceListing.deleteMany({ where: { adSpaceId: id } });
-      await tx.adSpace.delete({ where: { id } });
+    const requests = await prisma.bookingRequest.findMany({
+      where: { adSpaceId: id },
+      select: { id: true },
     });
+    const requestIds = requests.map((request) => request.id);
+
+    const bookings = await prisma.booking.findMany({
+      where: { adSpaceId: id },
+      select: { id: true },
+    });
+    const bookingIds = bookings.map((booking) => booking.id);
+
+    // Batch transaction (not interactive) — required for Neon/Vercel pooled connections.
+    const steps: Prisma.PrismaPromise<unknown>[] = [];
+
+    if (requestIds.length > 0) {
+      steps.push(
+        prisma.payment.deleteMany({ where: { bookingRequestId: { in: requestIds } } }),
+        prisma.bookingRequest.deleteMany({ where: { adSpaceId: id } })
+      );
+    }
+
+    if (bookingIds.length > 0) {
+      steps.push(
+        prisma.invoice.deleteMany({ where: { bookingId: { in: bookingIds } } }),
+        prisma.booking.deleteMany({ where: { adSpaceId: id } })
+      );
+    }
+
+    steps.push(
+      prisma.wishlistItem.deleteMany({ where: { adSpaceId: id } }),
+      prisma.cartItem.deleteMany({ where: { adSpaceId: id } }),
+      prisma.marketplaceListing.deleteMany({ where: { adSpaceId: id } }),
+      prisma.adSpace.delete({ where: { id } })
+    );
+
+    await prisma.$transaction(steps);
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error("DELETE /imd/ad-spaces/[id] failed:", error);
     return NextResponse.json(
       { error: { message: "Could not delete this ad space." } },
       { status: 500 }
