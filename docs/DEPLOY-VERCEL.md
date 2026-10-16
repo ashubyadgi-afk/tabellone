@@ -127,6 +127,28 @@ You can keep both: local `.env` for Docker, Vercel dashboard for production.
 
 ---
 
+## Sync production schema (Neon)
+
+After pulling schema changes (new tables such as `cart_items`), update Neon once from your PC:
+
+1. Vercel → **Project** → **Settings** → **Environment Variables** → copy **Production** `DATABASE_URL` (Neon **pooled** URL).
+2. Create or edit `.env.production.local` in the repo root (do not commit):
+
+   ```
+   DATABASE_URL="postgresql://...neon.tech/...?sslmode=require"
+   ```
+
+3. Run:
+
+   ```powershell
+   $env:DATABASE_URL = (Get-Content .env.production.local | Where-Object { $_ -match '^DATABASE_URL=' }) -replace '^DATABASE_URL=','' -replace '^"','' -replace '"$',''
+   npm run db:push
+   ```
+
+4. Retry the feature on your Vercel URL (no redeploy needed for schema-only changes).
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -135,6 +157,7 @@ You can keep both: local `.env` for Docker, Vercel dashboard for production.
 | `Can't reach database` | Use Neon **pooled** URL; check `?sslmode=require` |
 | Login works locally but not Vercel | `SESSION_SECRET` must be set on Vercel |
 | Empty IMD | Run `db:push` + `db:seed` against Neon URL from your PC |
+| Delete ad space 500 — `cart_items` does not exist | Production DB is behind Prisma schema — run `db:push` against Neon (see **Sync production schema**) |
 | 500 on owner pages | Vercel → Project → Logs → check Function errors |
 | Ad Space photo upload fails on Vercel | Create a **Blob** store and set `BLOB_READ_WRITE_TOKEN`, then redeploy |
 

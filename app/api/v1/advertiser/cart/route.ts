@@ -2,19 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireApiRole, unauthorized } from "@/lib/api/auth-guard";
 import { apiError } from "@/lib/api/errors";
+import { isMissingCartTable } from "@/lib/db-tables";
 import { countCartItems } from "@/lib/services/cart.service";
-
-function isMissingCartTable(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const code = "code" in error ? String((error as { code?: string }).code) : "";
-  const message =
-    "message" in error ? String((error as { message?: string }).message) : "";
-  return (
-    code === "P2021" ||
-    /cart_items/i.test(message) ||
-    /does not exist/i.test(message)
-  );
-}
 
 export async function GET() {
   const session = await requireApiRole(["advertiser"]);

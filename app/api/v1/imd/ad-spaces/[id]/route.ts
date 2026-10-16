@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { publicTableExists } from "@/lib/db-tables";
 import { z } from "zod";
 import {
   adSpacePhotos,
@@ -195,9 +196,19 @@ export async function DELETE(
       );
     }
 
+    const [hasWishlistTable, hasCartTable] = await Promise.all([
+      publicTableExists("wishlist_items"),
+      publicTableExists("cart_items"),
+    ]);
+
+    if (hasWishlistTable) {
+      steps.push(prisma.wishlistItem.deleteMany({ where: { adSpaceId: id } }));
+    }
+    if (hasCartTable) {
+      steps.push(prisma.cartItem.deleteMany({ where: { adSpaceId: id } }));
+    }
+
     steps.push(
-      prisma.wishlistItem.deleteMany({ where: { adSpaceId: id } }),
-      prisma.cartItem.deleteMany({ where: { adSpaceId: id } }),
       prisma.marketplaceListing.deleteMany({ where: { adSpaceId: id } }),
       prisma.adSpace.delete({ where: { id } })
     );

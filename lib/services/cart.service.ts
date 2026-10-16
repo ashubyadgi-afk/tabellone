@@ -1,16 +1,5 @@
 import { prisma } from "@/lib/db";
-
-function isMissingCartTable(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const code = "code" in error ? String((error as { code?: string }).code) : "";
-  const message =
-    "message" in error ? String((error as { message?: string }).message) : "";
-  return (
-    code === "P2021" ||
-    /cart_items/i.test(message) ||
-    /does not exist/i.test(message)
-  );
-}
+import { isMissingCartTable } from "@/lib/db-tables";
 
 export async function listCartAdSpaceIds(organizationId: string): Promise<string[]> {
   try {
