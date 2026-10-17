@@ -2,12 +2,6 @@ import type { ListingStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/services/notification.service";
 
-type ReviewableAdSpace = {
-  id: string;
-  name: string;
-  imdStatus: string;
-};
-
 type ListingSnapshot = {
   id: string;
   status: ListingStatus;
@@ -132,35 +126,6 @@ export async function submitMarketplaceListing(input: {
   });
 
   return listing;
-}
-
-/** Owner-saved ad spaces (anything other than a draft) wait for admin approve/reject. */
-export async function submitAdSpaceForReview(
-  adSpace: ReviewableAdSpace,
-  actorUserId?: string | null
-) {
-  if (adSpace.imdStatus === "draft") return null;
-
-  return submitMarketplaceListing({
-    adSpaceId: adSpace.id,
-    title: adSpace.name,
-    actorUserId,
-  });
-}
-
-/** Catch ad spaces saved before review was queued automatically. */
-export async function queueAdSpacesAwaitingReview() {
-  const spaces = await prisma.adSpace.findMany({
-    where: {
-      imdStatus: { not: "draft" },
-      marketplaceListing: { is: null },
-    },
-    select: { id: true, name: true, imdStatus: true },
-  });
-
-  for (const space of spaces) {
-    await submitAdSpaceForReview(space);
-  }
 }
 
 export async function getAdminListing(id: string) {

@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireApiRole, unauthorized } from "@/lib/api/auth-guard";
-import { queueAdSpacesAwaitingReview, reviewMarketplaceListing } from "@/lib/services/listing-review.service";
+import { reviewMarketplaceListing } from "@/lib/services/listing-review.service";
 import { apiError } from "@/lib/api/errors";
 
 export async function GET() {
   const session = await requireApiRole(["admin"]);
   if (!session) return unauthorized();
-
-  await queueAdSpacesAwaitingReview();
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { status: { in: ["submitted", "under_review"] } },
