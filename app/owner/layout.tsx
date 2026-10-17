@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getLiveSession, redirectToRoleArea } from "@/lib/auth/live-session";
 import { prisma } from "@/lib/db";
 import { OwnerSidebar } from "@/components/layout/OwnerSidebar";
 
@@ -8,17 +8,14 @@ export default async function OwnerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  if (!session || session.role !== "owner") {
-    redirect("/login");
-  }
+  const session = redirectToRoleArea(await getLiveSession(), "owner");
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
   });
 
   if (!org) {
-    redirect("/login");
+    redirect("/api/v1/auth/session-reset");
   }
 
   return (

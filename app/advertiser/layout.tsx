@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
+import { getLiveSession, redirectToRoleArea } from "@/lib/auth/live-session";
 import { prisma } from "@/lib/db";
 import { AdvertiserSidebar } from "@/components/layout/AdvertiserSidebar";
 
@@ -8,15 +8,12 @@ export default async function AdvertiserLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  if (!session || session.role !== "advertiser" || !session.organizationId) {
-    redirect("/login");
-  }
+  const session = redirectToRoleArea(await getLiveSession(), "advertiser");
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
   });
-  if (!org) redirect("/login");
+  if (!org) redirect("/api/v1/auth/session-reset");
 
   return (
     <div className="flex min-h-screen bg-slate-50">
