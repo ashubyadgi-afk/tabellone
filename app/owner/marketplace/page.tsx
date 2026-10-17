@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader, Button, Badge } from "@/components/ui";
+import {
+  ListingReviewHistory,
+  type ListingReviewEventView,
+} from "@/components/ad-space/ListingReviewHistory";
 import { formatCurrency } from "@/lib/utils";
 
 type AdSpace = {
@@ -16,6 +20,7 @@ type Listing = {
   status: string;
   adSpaceId: string;
   reviewNotes: string | null;
+  events: ListingReviewEventView[];
 };
 
 export default function OwnerMarketplacePage() {
@@ -59,8 +64,6 @@ export default function OwnerMarketplacePage() {
         {adSpaces.map((space) => {
           const listing = getListing(space.id);
           const status = listing?.status;
-          const reviewNotes =
-            status === "approved" || status === "rejected" ? listing?.reviewNotes : null;
           return (
             <div
               key={space.id}
@@ -86,11 +89,10 @@ export default function OwnerMarketplacePage() {
                     >
                       Listing: {status}
                     </Badge>
-                    {reviewNotes ? (
-                      <p className="mt-2 text-sm text-slate-600">
-                        <span className="font-medium text-slate-700">Reason: </span>
-                        {reviewNotes}
-                      </p>
+                    {listing?.events?.length ? (
+                      <div className="mt-3">
+                        <ListingReviewHistory events={listing.events} />
+                      </div>
                     ) : null}
                   </div>
                 )}

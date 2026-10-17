@@ -143,7 +143,7 @@ export async function PATCH(
       },
     });
     if (adSpace.imdStatus !== "draft") {
-      await submitAdSpaceForReview(adSpace);
+      await submitAdSpaceForReview(adSpace, session.userId);
     }
     return NextResponse.json(adSpace);
   } catch {

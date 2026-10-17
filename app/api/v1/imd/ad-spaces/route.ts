@@ -98,7 +98,7 @@ export async function POST(request: Request) {
         availableTo: availableTo ? new Date(availableTo) : undefined,
       },
     });
-    await submitAdSpaceForReview(adSpace);
+    await submitAdSpaceForReview(adSpace, session.userId);
     return NextResponse.json(adSpace, { status: 201 });
   } catch {
     return NextResponse.json({ error: { message: "Ad space number already exists" } }, { status: 409 });

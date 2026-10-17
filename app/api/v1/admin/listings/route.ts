@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireApiRole, unauthorized } from "@/lib/api/auth-guard";
-import { createNotification } from "@/lib/services/notification.service";
-import { queueAdSpacesAwaitingReview } from "@/lib/services/listing-review.service";
+import { queueAdSpacesAwaitingReview, reviewMarketplaceListing } from "@/lib/services/listing-review.service";
 import { apiError } from "@/lib/api/errors";
 
 export async function GET() {
@@ -34,43 +33,22 @@ export async function PATCH(request: Request) {
   if (!reason) {
     return apiError("VALIDATION_ERROR", "Reason is required", 400);
   }
+  if (typeof id !== "string" || !id) {
+    return apiError("VALIDATION_ERROR", "Listing is required", 400);
+  }
 
-  const listing = await prisma.marketplaceListing.findUnique({
-    where: { id },
-    include: { adSpace: true },
+  const result = await reviewMarketplaceListing({
+    id,
+    action,
+    reason,
+    actorUserId: session.userId,
   });
-  if (!listing) return apiError("NOT_FOUND", "Listing not found", 404);
+  if (result.error === "NOT_FOUND") {
+    return apiError("NOT_FOUND", "Listing not found", 404);
+  }
+  if (result.error === "ALREADY_REVIEWED") {
+    return apiError("CONFLICT", "This listing is no longer waiting for review", 409);
+  }
 
-  const status = action === "approve" ? "approved" : "rejected";
-
-  const updated = await prisma.$transaction(async (tx) => {
-    const l = await tx.marketplaceListing.update({
-      where: { id },
-      data: {
-        status,
-        reviewNotes: reason,
-        reviewedAt: new Date(),
-        reviewedById: session.userId,
-      },
-    });
-
-    await tx.adSpace.update({
-      where: { id: listing.adSpaceId },
-      data: {
-        marketplaceListingStatus: action === "approve" ? "listed" : "not_listed",
-      },
-    });
-
-    return l;
-  });
-
-  await createNotification({
-    organizationId: listing.adSpace.organizationId,
-    type: action === "approve" ? "approval" : "rejection",
-    title: action === "approve" ? "Listing approved" : "Listing rejected",
-    message: `Your listing for ${listing.adSpace.name} has been ${action === "approve" ? "approved and is now public" : "rejected"}. Reason: ${reason}`,
-    link: "/owner/marketplace",
-  });
-
-  return NextResponse.json({ data: updated });
+  return NextResponse.json({ data: result.listing });
 }
