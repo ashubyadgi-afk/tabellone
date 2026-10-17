@@ -34,7 +34,11 @@ export function AdvertiserSpaceActions({
     setBusy(null);
     const data = await response.json().catch(() => null);
     if (!response.ok) {
-      setMessage("Could not save this space.");
+      const apiMessage =
+        data?.error?.message && typeof data.error.message === "string"
+          ? data.error.message
+          : null;
+      setMessage(apiMessage ?? "Could not save this space.");
       return;
     }
     if (kind === "cart" && typeof data?.count === "number") {
