@@ -16,18 +16,20 @@ import { submitAdSpaceForReview } from "@/lib/services/listing-review.service";
 
 const storedPhotoUrl = z.string().min(1);
 
+const optionalText = z.string().nullish();
+
 const schema = z.object({
   adSpaceNumber: z.string().min(1),
   name: z.string().min(1),
   adSpaceType: z.string().default("billboard"),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  address: z.string().optional(),
-  dimensions: z.string().optional(),
+  city: optionalText,
+  state: optionalText,
+  address: optionalText,
+  dimensions: optionalText,
   basePrice: z.number().optional().nullable(),
   footfall: z.number().int().optional().nullable(),
-  peakHours: z.string().optional(),
-  notes: z.string().optional(),
+  peakHours: optionalText,
+  notes: optionalText,
   availableFrom: z.string().optional().nullable(),
   availableTo: z.string().optional().nullable(),
   latitude: z.number().optional().nullable(),

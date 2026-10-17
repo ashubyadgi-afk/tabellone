@@ -64,6 +64,8 @@ export default function OwnerMarketplacePage() {
         {adSpaces.map((space) => {
           const listing = getListing(space.id);
           const status = listing?.status;
+          const canSubmit = !status || status === "draft" || status === "rejected";
+          const needsPrice = canSubmit && status !== "rejected" && space.basePrice == null;
           return (
             <div
               key={space.id}
@@ -97,14 +99,19 @@ export default function OwnerMarketplacePage() {
                   </div>
                 )}
               </div>
-              {!status || status === "draft" || status === "rejected" ? (
-                <Button
-                  size="sm"
-                  disabled={loading === space.id || !space.basePrice}
-                  onClick={() => submitListing(space.id)}
-                >
-                  {loading === space.id ? "Submitting…" : "Submit for review"}
-                </Button>
+              {canSubmit ? (
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    size="sm"
+                    disabled={loading === space.id || needsPrice}
+                    onClick={() => submitListing(space.id)}
+                  >
+                    {loading === space.id ? "Submitting…" : "Submit for review"}
+                  </Button>
+                  {needsPrice ? (
+                    <p className="text-xs text-slate-500">Add a base price to submit.</p>
+                  ) : null}
+                </div>
               ) : (
                 <Badge variant={status === "approved" ? "success" : "warning"}>
                   {status}
