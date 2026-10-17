@@ -13,7 +13,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export type AdSpacePreviewValues = {
-  adSpaceNumber: string;
   name: string;
   adSpaceType: string;
   city: string;
@@ -76,9 +75,6 @@ export function AdSpacePreview({ values }: { values: AdSpacePreviewValues }) {
               <h3 className="mt-1 truncate font-semibold text-slate-900">
                 {values.name.trim() || "Ad space name"}
               </h3>
-              <p className="mt-1 text-xs text-slate-500">
-                {values.adSpaceNumber.trim() || "Ad space number"}
-              </p>
             </div>
             <div className="shrink-0 text-right">
               <p className="text-sm font-bold text-[#1e3a5f]">
