@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader, Button, Badge } from "@/components/ui";
+import {
+  ListingReviewHistory,
+  type ListingReviewEventView,
+} from "@/components/ad-space/ListingReviewHistory";
 import { formatCurrency } from "@/lib/utils";
 
 type AdSpace = {
@@ -16,6 +20,7 @@ type Listing = {
   status: string;
   adSpaceId: string;
   reviewNotes: string | null;
+  events: ListingReviewEventView[];
 };
 
 export default function OwnerMarketplacePage() {
@@ -59,8 +64,8 @@ export default function OwnerMarketplacePage() {
         {adSpaces.map((space) => {
           const listing = getListing(space.id);
           const status = listing?.status;
-          const reviewNotes =
-            status === "approved" || status === "rejected" ? listing?.reviewNotes : null;
+          const canSubmit = !status || status === "draft" || status === "rejected";
+          const needsPrice = canSubmit && status !== "rejected" && space.basePrice == null;
           return (
             <div
               key={space.id}
@@ -86,23 +91,27 @@ export default function OwnerMarketplacePage() {
                     >
                       Listing: {status}
                     </Badge>
-                    {reviewNotes ? (
-                      <p className="mt-2 text-sm text-slate-600">
-                        <span className="font-medium text-slate-700">Reason: </span>
-                        {reviewNotes}
-                      </p>
+                    {listing?.events?.length ? (
+                      <div className="mt-3">
+                        <ListingReviewHistory events={listing.events} />
+                      </div>
                     ) : null}
                   </div>
                 )}
               </div>
-              {!status || status === "draft" || status === "rejected" ? (
-                <Button
-                  size="sm"
-                  disabled={loading === space.id || !space.basePrice}
-                  onClick={() => submitListing(space.id)}
-                >
-                  {loading === space.id ? "Submitting…" : "Submit for review"}
-                </Button>
+              {canSubmit ? (
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    size="sm"
+                    disabled={loading === space.id || needsPrice}
+                    onClick={() => submitListing(space.id)}
+                  >
+                    {loading === space.id ? "Submitting…" : "Submit for review"}
+                  </Button>
+                  {needsPrice ? (
+                    <p className="text-xs text-slate-500">Add a base price to submit.</p>
+                  ) : null}
+                </div>
               ) : (
                 <Badge variant={status === "approved" ? "success" : "warning"}>
                   {status}

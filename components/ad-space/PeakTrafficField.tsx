@@ -42,6 +42,40 @@ function rangeIsInvalid(from: ClockParts, to: ClockParts): boolean {
   return end <= start;
 }
 
+function parseClock(text: string): ClockParts | null {
+  const match = text.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  if (hour < 1 || hour > 12) return null;
+  const minute = Number(match[2] ?? "0");
+  const snapped = MINUTES.reduce((closest, option) =>
+    Math.abs(Number(option) - minute) < Math.abs(Number(closest) - minute) ? option : closest
+  );
+  return {
+    hour: String(hour),
+    minute: snapped,
+    period: match[3].toUpperCase() as Period,
+  };
+}
+
+function parsePeakTraffic(value: string): { from: ClockParts; to: ClockParts } | null {
+  const trimmed = value.trim();
+  if (!trimmed) return { from: EMPTY_CLOCK, to: EMPTY_CLOCK };
+  const parts = trimmed.split(/\s*[–—-]\s*/);
+  if (parts.length !== 2) return null;
+  let start = parts[0].trim();
+  const end = parts[1].trim();
+  if (!/(AM|PM)/i.test(start)) {
+    const period = end.match(/\b(AM|PM)\b/i)?.[1];
+    if (!period) return null;
+    start = `${start} ${period}`;
+  }
+  const from = parseClock(start);
+  const to = parseClock(end);
+  if (!from || !to) return null;
+  return { from, to };
+}
+
 function ClockSelects({
   label,
   value,
@@ -94,15 +128,20 @@ function ClockSelects({
 }
 
 export function PeakTrafficField({
+  value = "",
   onChange,
   onInvalidChange,
 }: {
+  value?: string;
   onChange: (value: string) => void;
   onInvalidChange?: (invalid: boolean) => void;
 }) {
-  const [from, setFrom] = useState<ClockParts>(EMPTY_CLOCK);
-  const [to, setTo] = useState<ClockParts>(EMPTY_CLOCK);
+  const parsed = parsePeakTraffic(value);
+  const [from, setFrom] = useState<ClockParts>(parsed?.from ?? EMPTY_CLOCK);
+  const [to, setTo] = useState<ClockParts>(parsed?.to ?? EMPTY_CLOCK);
   const [invalid, setInvalid] = useState(false);
+  const savedText = value.trim();
+  const showSaved = Boolean(savedText) && !parsed;
 
   function update(nextFrom: ClockParts, nextTo: ClockParts) {
     const nextInvalid = rangeIsInvalid(nextFrom, nextTo);
@@ -119,6 +158,9 @@ export function PeakTrafficField({
       <p className="mb-2 text-xs text-slate-500">
         Choose the hour, minutes in steps of 15, and AM or PM
       </p>
+      {showSaved ? (
+        <p className="mb-2 text-xs text-slate-500">Saved: {savedText}</p>
+      ) : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <ClockSelects
           label="From"

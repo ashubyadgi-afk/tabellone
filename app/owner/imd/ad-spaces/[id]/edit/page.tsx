@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
+import { PeakTrafficField } from "@/components/ad-space/PeakTrafficField";
 import { StateCityFields } from "@/components/ad-space/StateCityFields";
 import { adSpacePhotos, normalizePhotoUrls } from "@/lib/ad-space-photos";
 import {
@@ -29,6 +30,7 @@ export default function EditAdSpacePage() {
   const [error, setError] = useState("");
   const [photos, setPhotos] = useState<string[]>(["", "", ""]);
   const [photoError, setPhotoError] = useState("");
+  const [peakTrafficInvalid, setPeakTrafficInvalid] = useState(false);
   const [form, setForm] = useState({
     adSpaceNumber: "",
     name: "",
@@ -98,10 +100,17 @@ export default function EditAdSpacePage() {
     if (!asDraft && !photos[0]) {
       setPhotoError("Upload a cover photo before saving.");
     }
-    if (requiresAdSpaceDimensions(form.adSpaceType) && !dimensions) {
+    const dimensionsRequired = requiresAdSpaceDimensions(form.adSpaceType);
+    if (dimensionsRequired && !dimensions) {
       setError("Width and height are required.");
+    } else if (peakTrafficInvalid) {
+      setError("To time must be after From.");
     }
-    if ((!asDraft && !photos[0]) || (requiresAdSpaceDimensions(form.adSpaceType) && !dimensions)) {
+    if (
+      (!asDraft && !photos[0]) ||
+      (dimensionsRequired && !dimensions) ||
+      peakTrafficInvalid
+    ) {
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
@@ -305,14 +314,11 @@ export default function EditAdSpacePage() {
                 />
               </div>
             </div>
-            <div>
-              <Label>Peak hours</Label>
-              <Input
-                value={form.peakHours}
-                onChange={(e) => setForm({ ...form, peakHours: e.target.value })}
-                placeholder="6–9 PM"
-              />
-            </div>
+            <PeakTrafficField
+              value={form.peakHours}
+              onChange={(peakHours) => setForm({ ...form, peakHours })}
+              onInvalidChange={setPeakTrafficInvalid}
+            />
             <div>
               <Label>Notes</Label>
               <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
