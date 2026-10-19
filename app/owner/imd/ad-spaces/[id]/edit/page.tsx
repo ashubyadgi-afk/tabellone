@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
@@ -26,6 +26,11 @@ function dateInput(value?: string | null) {
 export default function EditAdSpacePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const afterSave =
+    searchParams.get("returnTo") === "/owner/marketplace"
+      ? "/owner/marketplace"
+      : "/owner/imd/ad-spaces";
   const [loading, setLoading] = useState<"save" | "draft" | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -139,7 +144,7 @@ export default function EditAdSpacePage() {
       setError(data.error?.message || "Failed to update");
       return;
     }
-    router.push("/owner/imd/ad-spaces");
+    router.push(afterSave);
     router.refresh();
   }
 
@@ -339,7 +344,7 @@ export default function EditAdSpacePage() {
               >
                 {loading === "draft" ? "Saving…" : "Save as Draft"}
               </Button>
-              <Link href="/owner/imd/ad-spaces">
+              <Link href={afterSave}>
                 <Button type="button" variant="ghost" disabled={loading !== null}>
                   Cancel
                 </Button>

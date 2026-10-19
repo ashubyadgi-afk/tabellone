@@ -105,7 +105,7 @@ export default function OwnerMarketplacePage() {
               <div className="flex shrink-0 flex-wrap items-center justify-end gap-3">
                 {canEdit ? (
                   <Link
-                    href={`/owner/imd/ad-spaces/${space.id}/edit`}
+                    href={`/owner/imd/ad-spaces/${space.id}/edit?returnTo=/owner/marketplace`}
                     className="inline-flex items-center gap-1.5 rounded-xl border border-[#1e3a5f]/20 bg-[#1e3a5f]/5 px-3 py-1.5 text-sm font-medium text-[#1e3a5f] hover:bg-[#1e3a5f]/10"
                   >
                     <Pencil className="h-3.5 w-3.5" />
