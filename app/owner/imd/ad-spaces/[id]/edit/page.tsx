@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
+import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
 import { PeakTrafficField } from "@/components/ad-space/PeakTrafficField";
 import { StateCityFields } from "@/components/ad-space/StateCityFields";
@@ -142,6 +143,8 @@ export default function EditAdSpacePage() {
     router.refresh();
   }
 
+  const dimensions = formatDimensions(form.width, form.height, form.unit);
+
   return (
     <div>
       <PageHeader title="Edit Ad Space" description="Update inventory details in IMD" />
@@ -153,7 +156,8 @@ export default function EditAdSpacePage() {
       {!ready && !error ? (
         <p className="text-sm text-slate-500">Loading…</p>
       ) : ready ? (
-        <Card className="max-w-2xl p-6">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)]">
+        <Card className="p-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -343,6 +347,16 @@ export default function EditAdSpacePage() {
             </div>
           </form>
         </Card>
+        <aside className="lg:sticky lg:top-24">
+          <AdSpacePreview
+            values={{
+              ...form,
+              dimensions: dimensions ?? "",
+              photos,
+            }}
+          />
+        </aside>
+        </div>
       ) : null}
     </div>
   );
