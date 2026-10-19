@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PageHeader, Button, Badge } from "@/components/ui";
 import {
   ListingReviewHistory,
@@ -66,6 +67,7 @@ export default function OwnerMarketplacePage() {
           const status = listing?.status;
           const canSubmit = !status || status === "draft" || status === "rejected";
           const needsPrice = canSubmit && status !== "rejected" && space.basePrice == null;
+          const canEdit = status !== "approved";
           return (
             <div
               key={space.id}
@@ -99,24 +101,34 @@ export default function OwnerMarketplacePage() {
                   </div>
                 )}
               </div>
-              {canSubmit ? (
-                <div className="flex flex-col items-end gap-1">
-                  <Button
-                    size="sm"
-                    disabled={loading === space.id || needsPrice}
-                    onClick={() => submitListing(space.id)}
+              <div className="flex flex-col items-end gap-2">
+                {canEdit ? (
+                  <Link
+                    href={`/owner/imd/ad-spaces/${space.id}/edit`}
+                    className="text-sm font-medium text-[#1e3a5f] hover:underline"
                   >
-                    {loading === space.id ? "Submitting…" : "Submit for review"}
-                  </Button>
-                  {needsPrice ? (
-                    <p className="text-xs text-slate-500">Add a base price to submit.</p>
-                  ) : null}
-                </div>
-              ) : (
-                <Badge variant={status === "approved" ? "success" : "warning"}>
-                  {status}
-                </Badge>
-              )}
+                    Edit
+                  </Link>
+                ) : null}
+                {canSubmit ? (
+                  <>
+                    <Button
+                      size="sm"
+                      disabled={loading === space.id || needsPrice}
+                      onClick={() => submitListing(space.id)}
+                    >
+                      {loading === space.id ? "Submitting…" : "Submit for review"}
+                    </Button>
+                    {needsPrice ? (
+                      <p className="text-xs text-slate-500">Add a base price to submit.</p>
+                    ) : null}
+                  </>
+                ) : (
+                  <Badge variant={status === "approved" ? "success" : "warning"}>
+                    {status}
+                  </Badge>
+                )}
+              </div>
             </div>
           );
         })}
