@@ -10,6 +10,8 @@ type Listing = {
   id: string;
   status: string;
   submittedAt: string | null;
+  reviewedAt: string | null;
+  updatedAt: string;
   adSpace: {
     name: string;
     adSpaceNumber: string;
@@ -42,12 +44,12 @@ export default function AdminListingsPage() {
     <div>
       <PageHeader
         title="Listing approvals"
-        description="Open an ad to see earlier review comments, then approve or reject it with a reason."
+        description="Approved, rejected, and waiting ads are listed here, with the latest updates at the top. Open an ad to see its history."
       />
       {loading ? (
         <p className="text-slate-500">Loading…</p>
       ) : listings.length === 0 ? (
-        <p className="text-slate-500">No pending listings.</p>
+        <p className="text-slate-500">No listings yet.</p>
       ) : (
         <div className="space-y-4">
           {listings.map((listing) => {
@@ -90,15 +92,23 @@ export default function AdminListingsPage() {
                     <p className="mt-1 text-sm text-slate-500">{space.address}</p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge variant="warning">{listing.status.replaceAll("_", " ")}</Badge>
-                    {listing.submittedAt ? (
-                      <span className="text-xs text-slate-500">
-                        Submitted {formatDateTime(listing.submittedAt)}
-                      </span>
-                    ) : null}
+                    <Badge
+                      variant={
+                        listing.status === "approved"
+                          ? "success"
+                          : listing.status === "rejected"
+                            ? "warning"
+                            : "default"
+                      }
+                    >
+                      {listing.status.replaceAll("_", " ")}
+                    </Badge>
+                    <span className="text-xs text-slate-500">
+                      Updated {formatDateTime(listing.reviewedAt || listing.submittedAt || listing.updatedAt)}
+                    </span>
                   </div>
                 </div>
-                <span className="text-sm font-medium text-[#1e3a5f]">Review</span>
+                <span className="text-sm font-medium text-[#1e3a5f]">Details</span>
               </Link>
             );
           })}

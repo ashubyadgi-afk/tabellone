@@ -9,11 +9,11 @@ export async function GET() {
   if (!session) return unauthorized();
 
   const listings = await prisma.marketplaceListing.findMany({
-    where: { status: { in: ["submitted", "under_review"] } },
+    where: { status: { in: ["submitted", "under_review", "approved", "rejected"] } },
     include: {
       adSpace: { include: { organization: true } },
     },
-    orderBy: { submittedAt: "desc" },
+    orderBy: { updatedAt: "desc" },
   });
 
   return NextResponse.json({ data: listings });
