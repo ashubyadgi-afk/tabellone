@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { PageHeader, Button, Badge } from "@/components/ui";
 import {
   ListingReviewHistory,
@@ -101,12 +102,13 @@ export default function OwnerMarketplacePage() {
                   </div>
                 )}
               </div>
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-3">
                 {canEdit ? (
                   <Link
                     href={`/owner/imd/ad-spaces/${space.id}/edit`}
-                    className="text-sm font-medium text-[#1e3a5f] hover:underline"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#1e3a5f]/20 bg-[#1e3a5f]/5 px-3 py-1.5 text-sm font-medium text-[#1e3a5f] hover:bg-[#1e3a5f]/10"
                   >
+                    <Pencil className="h-3.5 w-3.5" />
                     Edit
                   </Link>
                 ) : null}
