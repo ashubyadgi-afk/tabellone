@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { PageHeader, Button, Badge } from "@/components/ui";
+import {
+  ListingReviewHistory,
+  type ListingReviewEventView,
+} from "@/components/ad-space/ListingReviewHistory";
 import { formatCurrency } from "@/lib/utils";
 
 type AdSpace = {
@@ -16,6 +22,7 @@ type Listing = {
   status: string;
   adSpaceId: string;
   reviewNotes: string | null;
+  events: ListingReviewEventView[];
 };
 
 export default function OwnerMarketplacePage() {
@@ -59,8 +66,9 @@ export default function OwnerMarketplacePage() {
         {adSpaces.map((space) => {
           const listing = getListing(space.id);
           const status = listing?.status;
-          const reviewNotes =
-            status === "approved" || status === "rejected" ? listing?.reviewNotes : null;
+          const canSubmit = !status || status === "draft" || status === "rejected";
+          const needsPrice = canSubmit && status !== "rejected" && space.basePrice == null;
+          const canEdit = status !== "approved";
           return (
             <div
               key={space.id}
@@ -86,28 +94,43 @@ export default function OwnerMarketplacePage() {
                     >
                       Listing: {status}
                     </Badge>
-                    {reviewNotes ? (
-                      <p className="mt-2 text-sm text-slate-600">
-                        <span className="font-medium text-slate-700">Reason: </span>
-                        {reviewNotes}
-                      </p>
+                    {listing?.events?.length ? (
+                      <div className="mt-3">
+                        <ListingReviewHistory events={listing.events} />
+                      </div>
                     ) : null}
                   </div>
                 )}
               </div>
-              {!status || status === "draft" || status === "rejected" ? (
-                <Button
-                  size="sm"
-                  disabled={loading === space.id || !space.basePrice}
-                  onClick={() => submitListing(space.id)}
-                >
-                  {loading === space.id ? "Submitting…" : "Submit for review"}
-                </Button>
-              ) : (
-                <Badge variant={status === "approved" ? "success" : "warning"}>
-                  {status}
-                </Badge>
-              )}
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-3">
+                {canEdit ? (
+                  <Link
+                    href={`/owner/imd/ad-spaces/${space.id}/edit?returnTo=/owner/marketplace`}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#1e3a5f]/20 bg-[#1e3a5f]/5 px-3 py-1.5 text-sm font-medium text-[#1e3a5f] hover:bg-[#1e3a5f]/10"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </Link>
+                ) : null}
+                {canSubmit ? (
+                  <>
+                    <Button
+                      size="sm"
+                      disabled={loading === space.id || needsPrice}
+                      onClick={() => submitListing(space.id)}
+                    >
+                      {loading === space.id ? "Submitting…" : "Submit for review"}
+                    </Button>
+                    {needsPrice ? (
+                      <p className="text-xs text-slate-500">Add a base price to submit.</p>
+                    ) : null}
+                  </>
+                ) : (
+                  <Badge variant={status === "approved" ? "success" : "warning"}>
+                    {status}
+                  </Badge>
+                )}
+              </div>
             </div>
           );
         })}

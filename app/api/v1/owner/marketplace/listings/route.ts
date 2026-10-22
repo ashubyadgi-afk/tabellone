@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireApiRole, unauthorized } from "@/lib/api/auth-guard";
-import { createNotification } from "@/lib/services/notification.service";
+import {
+  ensureListingReviewHistory,
+  submitMarketplaceListing,
+} from "@/lib/services/listing-review.service";
 import { apiError } from "@/lib/api/errors";
+
+const eventsInclude = {
+  orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }],
+  include: {
+    actor: { select: { email: true, role: true } },
+  },
+};
 
 export async function GET() {
   const session = await requireApiRole(["owner"]);
@@ -10,9 +20,20 @@ export async function GET() {
 
   const listings = await prisma.marketplaceListing.findMany({
     where: { adSpace: { organizationId: session.organizationId } },
-    include: { adSpace: true },
+    include: { adSpace: true, events: eventsInclude },
     orderBy: { updatedAt: "desc" },
   });
+
+  const missingHistory = listings.filter((listing) => listing.events.length === 0);
+  if (missingHistory.length > 0) {
+    await Promise.all(missingHistory.map((listing) => ensureListingReviewHistory(listing)));
+    const refreshed = await prisma.marketplaceListing.findMany({
+      where: { adSpace: { organizationId: session.organizationId } },
+      include: { adSpace: true, events: eventsInclude },
+      orderBy: { updatedAt: "desc" },
+    });
+    return NextResponse.json({ data: refreshed });
+  }
 
   return NextResponse.json({ data: listings });
 }
@@ -27,35 +48,13 @@ export async function POST(request: Request) {
   });
   if (!adSpace) return apiError("NOT_FOUND", "Ad space not found", 404);
 
-  const listing = await prisma.marketplaceListing.upsert({
-    where: { adSpaceId: adSpace.id },
-    create: {
-      adSpaceId: adSpace.id,
-      title: body.title || adSpace.name,
-      description: body.description,
-      ownershipType: body.ownershipType,
-      documentNotes: body.documentNotes,
-      status: "submitted",
-      submittedAt: new Date(),
-    },
-    update: {
-      title: body.title || adSpace.name,
-      description: body.description,
-      ownershipType: body.ownershipType,
-      documentNotes: body.documentNotes,
-      status: "submitted",
-      submittedAt: new Date(),
-      reviewNotes: null,
-      reviewedAt: null,
-      reviewedById: null,
-    },
-  });
-
-  await createNotification({
-    type: "listing",
-    title: "New listing submitted",
-    message: `Listing submitted for ${adSpace.name} — pending admin review.`,
-    link: "/admin/listings",
+  const listing = await submitMarketplaceListing({
+    adSpaceId: adSpace.id,
+    title: body.title || adSpace.name,
+    description: body.description,
+    ownershipType: body.ownershipType,
+    documentNotes: body.documentNotes,
+    actorUserId: session.userId,
   });
 
   return NextResponse.json({ data: listing });

@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
 import { LocationPicker } from "@/components/map/LocationPicker";
+import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
+import { PeakTrafficField } from "@/components/ad-space/PeakTrafficField";
 import { StateCityFields } from "@/components/ad-space/StateCityFields";
 import { adSpacePhotos, normalizePhotoUrls } from "@/lib/ad-space-photos";
 import {
@@ -24,11 +26,17 @@ function dateInput(value?: string | null) {
 export default function EditAdSpacePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const afterSave =
+    searchParams.get("returnTo") === "/owner/marketplace"
+      ? "/owner/marketplace"
+      : "/owner/imd/ad-spaces";
   const [loading, setLoading] = useState<"save" | "draft" | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [photos, setPhotos] = useState<string[]>(["", "", ""]);
   const [photoError, setPhotoError] = useState("");
+  const [peakTrafficInvalid, setPeakTrafficInvalid] = useState(false);
   const [form, setForm] = useState({
     adSpaceNumber: "",
     name: "",
@@ -98,10 +106,17 @@ export default function EditAdSpacePage() {
     if (!asDraft && !photos[0]) {
       setPhotoError("Upload a cover photo before saving.");
     }
-    if (requiresAdSpaceDimensions(form.adSpaceType) && !dimensions) {
+    const dimensionsRequired = requiresAdSpaceDimensions(form.adSpaceType);
+    if (dimensionsRequired && !dimensions) {
       setError("Width and height are required.");
+    } else if (peakTrafficInvalid) {
+      setError("To time must be after From.");
     }
-    if ((!asDraft && !photos[0]) || (requiresAdSpaceDimensions(form.adSpaceType) && !dimensions)) {
+    if (
+      (!asDraft && !photos[0]) ||
+      (dimensionsRequired && !dimensions) ||
+      peakTrafficInvalid
+    ) {
       return;
     }
     const photoUrls = normalizePhotoUrls(photos);
@@ -129,9 +144,11 @@ export default function EditAdSpacePage() {
       setError(data.error?.message || "Failed to update");
       return;
     }
-    router.push("/owner/imd/ad-spaces");
+    router.push(afterSave);
     router.refresh();
   }
+
+  const dimensions = formatDimensions(form.width, form.height, form.unit);
 
   return (
     <div>
@@ -144,7 +161,8 @@ export default function EditAdSpacePage() {
       {!ready && !error ? (
         <p className="text-sm text-slate-500">Loading…</p>
       ) : ready ? (
-        <Card className="max-w-2xl p-6">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)]">
+        <Card className="p-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -305,14 +323,11 @@ export default function EditAdSpacePage() {
                 />
               </div>
             </div>
-            <div>
-              <Label>Peak hours</Label>
-              <Input
-                value={form.peakHours}
-                onChange={(e) => setForm({ ...form, peakHours: e.target.value })}
-                placeholder="6–9 PM"
-              />
-            </div>
+            <PeakTrafficField
+              value={form.peakHours}
+              onChange={(peakHours) => setForm({ ...form, peakHours })}
+              onInvalidChange={setPeakTrafficInvalid}
+            />
             <div>
               <Label>Notes</Label>
               <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -329,7 +344,7 @@ export default function EditAdSpacePage() {
               >
                 {loading === "draft" ? "Saving…" : "Save as Draft"}
               </Button>
-              <Link href="/owner/imd/ad-spaces">
+              <Link href={afterSave}>
                 <Button type="button" variant="ghost" disabled={loading !== null}>
                   Cancel
                 </Button>
@@ -337,6 +352,16 @@ export default function EditAdSpacePage() {
             </div>
           </form>
         </Card>
+        <aside className="lg:sticky lg:top-24">
+          <AdSpacePreview
+            values={{
+              ...form,
+              dimensions: dimensions ?? "",
+              photos,
+            }}
+          />
+        </aside>
+        </div>
       ) : null}
     </div>
   );

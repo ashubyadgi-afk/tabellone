@@ -60,6 +60,13 @@ enum ListingStatus {
   suspended
 }
 
+enum ListingReviewAction {
+  submitted
+  resubmitted
+  approved
+  rejected
+}
+
 enum BookingStatus {
   draft
   confirmed
@@ -173,7 +180,8 @@ model User {
   organization      Organization?      @relation(fields: [organizationId], references: [id])
   ownerProfile      OwnerProfile?
   advertiserProfile AdvertiserProfile?
-  notifications     Notification[]
+  notifications       Notification[]
+  listingReviewEvents ListingReviewEvent[]
 
   @@map("users")
 }
@@ -264,9 +272,25 @@ model MarketplaceListing {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  adSpace AdSpace @relation(fields: [adSpaceId], references: [id])
+  adSpace AdSpace              @relation(fields: [adSpaceId], references: [id])
+  events  ListingReviewEvent[]
 
   @@map("marketplace_listings")
+}
+
+model ListingReviewEvent {
+  id          String              @id @default(uuid())
+  listingId   String              @map("listing_id")
+  action      ListingReviewAction
+  reason      String?
+  actorUserId String?             @map("actor_user_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  listing MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  actor   User?              @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([listingId, createdAt])
+  @@map("listing_review_events")
 }
 
 model Client {
