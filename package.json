@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma db push && next build",
+    "dev": "node scripts/next-dev.mjs",
+    "build": "next build",
+    "vercel-build": "prisma db push && next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",

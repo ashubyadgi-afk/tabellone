@@ -54,7 +54,8 @@ async function ensureSchema() {
       globalForPrisma.schemaReady = true;
     })().catch((error) => {
       globalForPrisma.schemaEnsure = undefined;
-      throw error;
+      console.error("ensureSchema failed (continuing):", error);
+      globalForPrisma.schemaReady = true;
     });
   }
   await globalForPrisma.schemaEnsure;
