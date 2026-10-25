@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
+import {
+  inclusiveBookingDays,
+  minimumBookingEnd,
+  MIN_BOOKING_DAYS,
+  prorateMonthlyAmount,
+} from "@/lib/booking-span";
 
 export function BookAdSpaceForm({
   adSpaceId,
@@ -22,9 +28,34 @@ export function BookAdSpaceForm({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function onStartDateChange(value: string) {
+    setStartDate(value);
+    setEndDate(value ? minimumBookingEnd(value) : "");
+  }
+
+  function onEndDateChange(value: string) {
+    if (!startDate) {
+      setEndDate(value);
+      return;
+    }
+    const minimum = minimumBookingEnd(startDate);
+    setEndDate(value && value < minimum ? minimum : value);
+  }
+
+  const selectedDays =
+    startDate && endDate ? inclusiveBookingDays(startDate, endDate) : null;
+  const estimatedTotal =
+    customerPrice && selectedDays && selectedDays >= MIN_BOOKING_DAYS
+      ? prorateMonthlyAmount(customerPrice, selectedDays)
+      : null;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!selectedDays || selectedDays < MIN_BOOKING_DAYS) {
+      setError(`Select at least ${MIN_BOOKING_DAYS} days.`);
+      return;
+    }
     setLoading(true);
 
     const res = await fetch("/api/v1/advertiser/booking-requests", {
@@ -56,11 +87,24 @@ export function BookAdSpaceForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="font-semibold text-slate-900">Request to book</h2>
-      {customerPrice && (
+      {customerPrice ? (
         <p className="text-sm text-slate-500">
-          Estimated total: <strong>{formatCurrency(customerPrice)}</strong>/month
+          {estimatedTotal != null && selectedDays ? (
+            <>
+              Estimated total: <strong>{formatCurrency(estimatedTotal)}</strong>
+              {" "}for {selectedDays} day{selectedDays === 1 ? "" : "s"}
+              <span className="block text-xs text-slate-400">
+                Monthly rate {formatCurrency(customerPrice)} for 30 days
+              </span>
+            </>
+          ) : (
+            <>
+              Monthly rate: <strong>{formatCurrency(customerPrice)}</strong> for 30 days.
+              Minimum booking is {MIN_BOOKING_DAYS} days.
+            </>
+          )}
         </p>
-      )}
+      ) : null}
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
       )}
@@ -69,7 +113,7 @@ export function BookAdSpaceForm({
         <input
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => onStartDateChange(e.target.value)}
           required
           className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
         />
@@ -79,7 +123,8 @@ export function BookAdSpaceForm({
         <input
           type="date"
           value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
+          min={startDate ? minimumBookingEnd(startDate) : undefined}
+          onChange={(e) => onEndDateChange(e.target.value)}
           required
           className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
         />

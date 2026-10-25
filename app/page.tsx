@@ -10,6 +10,9 @@ import {
   Car,
   Monitor,
 } from "lucide-react";
+import { getSession } from "@/lib/auth/session";
+import { listCartAdSpaceIds } from "@/lib/services/cart.service";
+import { listWishlistAdSpaceIds } from "@/lib/services/wishlist.service";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { AiSearchBar } from "@/components/marketplace/AiSearchBar";
 import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
@@ -18,7 +21,7 @@ import { listPublicAdSpaces } from "@/lib/services/marketplace.service";
 import { pricePublicListings } from "@/lib/services/pricing.service";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 type ListedSpace = Awaited<ReturnType<typeof listPublicAdSpaces>>[number];
 
@@ -30,6 +33,9 @@ function ListingSection({
   viewMoreHref,
   viewMoreLabel,
   items,
+  signedIn = false,
+  cartIds,
+  wishlistIds,
 }: {
   id: string;
   eyebrow?: string;
@@ -38,6 +44,9 @@ function ListingSection({
   viewMoreHref: string;
   viewMoreLabel: string;
   items: { space: ListedSpace; customerPrice: number | null }[];
+  signedIn?: boolean;
+  cartIds?: Set<string>;
+  wishlistIds?: Set<string>;
 }) {
   return (
     <section id={id} className="scroll-mt-24 mx-auto max-w-7xl px-6 py-16">
@@ -70,7 +79,14 @@ function ListingSection({
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map(({ space, customerPrice }) => (
-            <AdSpaceCard key={space.id} space={space} customerPrice={customerPrice} />
+            <AdSpaceCard
+              key={space.id}
+              space={space}
+              customerPrice={customerPrice}
+              signedIn={signedIn}
+              inCart={cartIds?.has(space.id)}
+              inWishlist={wishlistIds?.has(space.id)}
+            />
           ))}
         </div>
       )}
@@ -79,6 +95,19 @@ function ListingSection({
 }
 
 export default async function HomePage() {
+  const session = await getSession();
+  const advertiserId =
+    session?.role === "advertiser" && session.organizationId
+      ? session.organizationId
+      : null;
+  const [cartIds, wishlistIds] = advertiserId
+    ? await Promise.all([
+        listCartAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
+        listWishlistAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
+      ])
+    : [new Set<string>(), new Set<string>()];
+  const signedIn = Boolean(advertiserId);
+
   const [trending, billboardItems, vehicleItems, mallItems] = await Promise.all([
     listPublicAdSpaces({ take: 3 }).then(pricePublicListings),
     listPublicAdSpaces({ types: ["billboard", "digital"], take: 6 }).then(
@@ -186,7 +215,14 @@ export default async function HomePage() {
           </div>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {trending.map(({ space, customerPrice }) => (
-              <AdSpaceCard key={space.id} space={space} customerPrice={customerPrice} />
+              <AdSpaceCard
+                key={space.id}
+                space={space}
+                customerPrice={customerPrice}
+                signedIn={signedIn}
+                inCart={cartIds.has(space.id)}
+                inWishlist={wishlistIds.has(space.id)}
+              />
             ))}
           </div>
         </section>
@@ -200,6 +236,9 @@ export default async function HomePage() {
         viewMoreHref="/marketplace?type=billboard"
         viewMoreLabel="View more billboards"
         items={billboardItems}
+        signedIn={signedIn}
+        cartIds={cartIds}
+        wishlistIds={wishlistIds}
       />
 
       <div className="bg-white">
@@ -211,6 +250,9 @@ export default async function HomePage() {
           viewMoreHref="/marketplace?type=vehicle"
           viewMoreLabel="View more vehicle ads"
           items={vehicleItems}
+          signedIn={signedIn}
+          cartIds={cartIds}
+          wishlistIds={wishlistIds}
         />
       </div>
 
@@ -222,6 +264,9 @@ export default async function HomePage() {
         viewMoreHref="/marketplace?type=mall"
         viewMoreLabel="View more mall ads"
         items={mallItems}
+        signedIn={signedIn}
+        cartIds={cartIds}
+        wishlistIds={wishlistIds}
       />
 
       <section id="about" className="scroll-mt-24 border-t border-slate-200 bg-white">

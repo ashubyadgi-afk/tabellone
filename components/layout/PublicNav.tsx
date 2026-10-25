@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getRoleHomePath, getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
-import { CartNavLink } from "@/components/marketplace/CartNavLink";
+import { AdvertiserNav } from "@/components/marketplace/AdvertiserNav";
 import { countCartItems } from "@/lib/services/cart.service";
+import { countWishlistItems } from "@/lib/services/wishlist.service";
 
 export async function PublicNav() {
   const session = await getSession();
@@ -11,7 +11,7 @@ export async function PublicNav() {
   const dashboardHref = session && !advertiserOrgId ? getRoleHomePath(session.role) : null;
   const [wishlistCount, cartCount] = advertiserOrgId
     ? await Promise.all([
-        prisma.wishlistItem.count({ where: { organizationId: advertiserOrgId } }),
+        countWishlistItems(advertiserOrgId),
         countCartItems(advertiserOrgId),
       ])
     : [0, 0];
@@ -43,21 +43,10 @@ export async function PublicNav() {
         </nav>
         <div className="flex items-center gap-3 text-sm">
           {advertiserOrgId ? (
-            <>
-              <Link
-                href="/advertiser/wishlist"
-                className="font-medium text-slate-600 hover:text-[#4C4BFF]"
-              >
-                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
-              </Link>
-              <CartNavLink initialCount={cartCount} />
-              <Link
-                href="/advertiser/booking-requests"
-                className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
-              >
-                Bookings
-              </Link>
-            </>
+            <AdvertiserNav
+              initialWishlistCount={wishlistCount}
+              initialCartCount={cartCount}
+            />
           ) : (
             <>
               {dashboardHref ? (

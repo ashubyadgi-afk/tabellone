@@ -11,6 +11,7 @@ import {
 } from "@/lib/services/marketplace.service";
 import { pricePublicListings } from "@/lib/services/pricing.service";
 import { listCartAdSpaceIds } from "@/lib/services/cart.service";
+import { listWishlistAdSpaceIds } from "@/lib/services/wishlist.service";
 
 export const dynamic = "force-dynamic";
 
@@ -36,10 +37,16 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   const filters = marketplaceFiltersFromParams(params);
   const spaces = await listPublicAdSpaces(filters);
   const priced = await pricePublicListings(spaces);
-  const cartIds =
+  const advertiserId =
     session?.role === "advertiser" && session.organizationId
-      ? new Set(await listCartAdSpaceIds(session.organizationId))
-      : new Set<string>();
+      ? session.organizationId
+      : null;
+  const [cartIds, wishlistIds] = advertiserId
+    ? await Promise.all([
+        listCartAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
+        listWishlistAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
+      ])
+    : [new Set<string>(), new Set<string>()];
 
   const searched = Boolean(
     params.view === "results" ||
@@ -136,7 +143,9 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
                     key={space.id}
                     space={space}
                     customerPrice={customerPrice}
+                    signedIn={Boolean(advertiserId)}
                     inCart={cartIds.has(space.id)}
+                    inWishlist={wishlistIds.has(space.id)}
                   />
                 ))}
               </div>

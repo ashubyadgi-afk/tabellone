@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { availabilityLabel } from "@/lib/marketplace/search";
 import { adSpacePhotos } from "@/lib/ad-space-photos";
 import { Card } from "@/components/ui";
+import { CardAddToCartButton, CardWishlistButton } from "@/components/marketplace/ListingCardActions";
 
 type AdSpaceCardProps = {
   space: {
@@ -28,16 +29,24 @@ type AdSpaceCardProps = {
   };
   customerPrice?: number | null;
   inCart?: boolean;
+  inWishlist?: boolean;
+  signedIn?: boolean;
 };
 
-export function AdSpaceCard({ space, customerPrice, inCart = false }: AdSpaceCardProps) {
+export function AdSpaceCard({
+  space,
+  customerPrice,
+  inCart = false,
+  inWishlist = false,
+  signedIn = false,
+}: AdSpaceCardProps) {
   const price = customerPrice ?? space.basePrice;
   const cover = adSpacePhotos(space)[0];
 
   return (
-    <Link href={`/marketplace/${space.id}`}>
-      <Card className="group overflow-hidden transition hover:shadow-lg hover:border-orange-200">
-        <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+    <Card className="group overflow-hidden transition hover:shadow-lg hover:border-orange-200">
+      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+        <Link href={`/marketplace/${space.id}`} className="absolute inset-0">
           {cover ? (
             <Image
               src={cover}
@@ -53,13 +62,20 @@ export function AdSpaceCard({ space, customerPrice, inCart = false }: AdSpaceCar
               </span>
             </div>
           )}
-          {inCart ? (
-            <span className="absolute left-3 top-3 rounded-full bg-[#4C4BFF] px-2.5 py-1 text-xs font-semibold text-white">
-              Added to cart
-            </span>
-          ) : null}
-        </div>
-        <div className="p-5">
+        </Link>
+        {inCart ? (
+          <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-[#4C4BFF] px-2.5 py-1 text-xs font-semibold text-white">
+            Added to cart
+          </span>
+        ) : null}
+        <CardWishlistButton
+          adSpaceId={space.id}
+          signedIn={signedIn}
+          inWishlist={inWishlist}
+        />
+      </div>
+      <div className="p-5">
+        <Link href={`/marketplace/${space.id}`}>
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
@@ -75,12 +91,12 @@ export function AdSpaceCard({ space, customerPrice, inCart = false }: AdSpaceCar
                 </p>
               ) : null}
             </div>
-            {price && (
+            {price ? (
               <p className="shrink-0 text-sm font-bold text-[#1e3a5f]">
                 {formatCurrency(price)}
                 <span className="text-xs font-normal text-slate-500">/mo</span>
               </p>
-            )}
+            ) : null}
           </div>
           <div className="mt-3 space-y-1.5 text-sm text-slate-500">
             <p className="flex items-center gap-1.5 font-medium text-[#1e3a5f]">
@@ -93,27 +109,34 @@ export function AdSpaceCard({ space, customerPrice, inCart = false }: AdSpaceCar
                 {[space.city, space.state].filter(Boolean).join(", ") || space.address}
               </p>
             )}
-            {space.footfall && (
+            {space.footfall ? (
               <p className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 shrink-0" />
                 {space.footfall.toLocaleString("en-IN")} daily footfall
               </p>
-            )}
-            {space.dimensions && (
+            ) : null}
+            {space.dimensions ? (
               <p className="flex items-center gap-1.5">
                 <IndianRupee className="h-3.5 w-3.5 shrink-0" />
                 {space.dimensions}
               </p>
-            )}
-            {space.peakHours && (
+            ) : null}
+            {space.peakHours ? (
               <p className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
                 {space.peakHours}
               </p>
-            )}
+            ) : null}
           </div>
+        </Link>
+        <div className="mt-4 flex justify-end">
+          <CardAddToCartButton
+            adSpaceId={space.id}
+            signedIn={signedIn}
+            inCart={inCart}
+          />
         </div>
-      </Card>
-    </Link>
+      </div>
+    </Card>
   );
 }

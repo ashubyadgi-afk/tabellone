@@ -1,4 +1,10 @@
 import { prisma } from "@/lib/db";
+import {
+  formatBookingDay,
+  inclusiveBookingDays,
+  MIN_BOOKING_DAYS,
+  prorateMonthlyAmount,
+} from "@/lib/booking-span";
 import { calculatePricingFromDb } from "./pricing.service";
 import { checkAvailability } from "./marketplace.service";
 import { createNotification } from "./notification.service";
@@ -32,7 +38,23 @@ export async function submitBookingRequest(data: {
     return { error: "Selected dates are not available" };
   }
 
-  const pricing = await calculatePricingFromDb(adSpace.basePrice);
+  const days = inclusiveBookingDays(
+    formatBookingDay(data.startDate),
+    formatBookingDay(data.endDate)
+  );
+  if (!days || days < MIN_BOOKING_DAYS) {
+    return { error: `Bookings must be at least ${MIN_BOOKING_DAYS} days` };
+  }
+
+  const monthly = await calculatePricingFromDb(adSpace.basePrice);
+  const pricing = {
+    basePrice: prorateMonthlyAmount(monthly.basePrice, days),
+    commissionAmount: prorateMonthlyAmount(monthly.commissionAmount, days),
+    gstOnCommission: prorateMonthlyAmount(monthly.gstOnCommission, days),
+    tdsAmount: prorateMonthlyAmount(monthly.tdsAmount, days),
+    ownerPayout: prorateMonthlyAmount(monthly.ownerPayout, days),
+    customerPrice: prorateMonthlyAmount(monthly.customerPrice, days),
+  };
 
   const request = await prisma.bookingRequest.create({
     data: {

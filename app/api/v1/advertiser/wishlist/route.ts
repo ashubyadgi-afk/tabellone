@@ -37,7 +37,10 @@ export async function POST(request: Request) {
     update: {},
   });
 
-  return NextResponse.json({ data: item });
+  const count = await prisma.wishlistItem.count({
+    where: { organizationId: session.organizationId },
+  });
+  return NextResponse.json({ data: item, count });
 }
 
 export async function DELETE(request: Request) {
@@ -52,5 +55,8 @@ export async function DELETE(request: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true });
+  const count = await prisma.wishlistItem.count({
+    where: { organizationId: session.organizationId },
+  });
+  return NextResponse.json({ ok: true, count });
 }

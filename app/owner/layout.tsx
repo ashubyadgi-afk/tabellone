@@ -19,14 +19,14 @@ export default async function OwnerLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 print:block print:bg-white">
+    <div className="flex h-screen overflow-hidden bg-slate-50 print:block print:h-auto print:overflow-visible print:bg-white">
       <div className="print:hidden">
         <OwnerSidebar
           organizationName={org.name}
           userEmail={session.email}
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto print:h-auto print:overflow-visible">
         <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/80 backdrop-blur-md print:hidden">
           <div className="flex h-16 items-center justify-between px-6 lg:px-8">
             <p className="text-sm text-slate-500">

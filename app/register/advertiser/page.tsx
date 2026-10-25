@@ -36,7 +36,7 @@ export default function RegisterAdvertiserPage() {
       setError(data.error?.message || "Registration failed");
       return;
     }
-    router.push("/marketplace");
+    router.push("/");
     router.refresh();
   }
 

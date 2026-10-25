@@ -84,7 +84,7 @@ export function getRoleHomePath(role: string): string {
     case "owner":
       return "/owner/dashboard";
     case "advertiser":
-      return "/marketplace";
+      return "/";
     default:
       return "/";
   }
