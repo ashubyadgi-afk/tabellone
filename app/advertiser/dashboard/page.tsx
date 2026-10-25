@@ -46,7 +46,7 @@ export default async function AdvertiserDashboardPage() {
           value={wishlist}
           icon={Heart}
           accent="rose"
-          href="/advertiser/wishlist"
+          href="/wishlist"
         />
         <StatCard
           label="Booking requests"

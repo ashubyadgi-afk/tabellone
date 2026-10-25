@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Megaphone,
-  Heart,
-  ShoppingCart,
   CalendarClock,
   CreditCard,
   Crown,
@@ -17,8 +15,6 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/advertiser/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/advertiser/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/advertiser/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/advertiser/cart", label: "Cart", icon: ShoppingCart },
   { href: "/advertiser/booking-requests", label: "Bookings", icon: CalendarClock },
   { href: "/advertiser/subscription", label: "Subscription", icon: Crown },
   { href: "/advertiser/wallet", label: "Wallet", icon: CreditCard },

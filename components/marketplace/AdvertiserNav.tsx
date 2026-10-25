@@ -54,11 +54,11 @@ export function AdvertiserNav({
 
   return (
     <div className="flex items-center gap-1">
-      <Link href="/advertiser/wishlist" aria-label="Wishlist" className={iconClass}>
+      <Link href="/wishlist" aria-label="Wishlist" className={iconClass}>
         <Heart className={`h-5 w-5 ${wishlistCount > 0 ? "fill-rose-500 text-rose-500" : ""}`} />
         <CountBadge count={wishlistCount} />
       </Link>
-      <Link href="/advertiser/cart" aria-label="Cart" className={iconClass}>
+      <Link href="/cart" aria-label="Cart" className={iconClass}>
         <ShoppingCart className="h-5 w-5" />
         <CountBadge count={cartCount} />
       </Link>

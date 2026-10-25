@@ -70,11 +70,11 @@ export function AdvertiserSpaceActions({
       </div>
       {message ? <p className="text-sm text-slate-600">{message}</p> : null}
       <p className="text-center text-xs text-slate-500">
-        <Link href="/advertiser/wishlist" className="hover:underline">
+        <Link href="/wishlist" className="hover:underline">
           Wishlist
         </Link>
         {" · "}
-        <Link href="/advertiser/cart" className="hover:underline">
+        <Link href="/cart" className="hover:underline">
           Cart
         </Link>
       </p>
