@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getRoleHomePath, getSession } from "@/lib/auth/session";
+import { AccountMenu } from "@/components/layout/AccountMenu";
 import { AdvertiserNav } from "@/components/marketplace/AdvertiserNav";
 import { countCartItems } from "@/lib/services/cart.service";
 import { countWishlistItems } from "@/lib/services/wishlist.service";
@@ -8,7 +9,10 @@ export async function PublicNav() {
   const session = await getSession();
   const advertiserOrgId =
     session?.role === "advertiser" && session.organizationId ? session.organizationId : null;
-  const dashboardHref = session && !advertiserOrgId ? getRoleHomePath(session.role) : null;
+  const staffDashboard =
+    session && (session.role === "owner" || session.role === "admin")
+      ? getRoleHomePath(session.role)
+      : null;
   const [wishlistCount, cartCount] = advertiserOrgId
     ? await Promise.all([
         countWishlistItems(advertiserOrgId),
@@ -47,20 +51,27 @@ export async function PublicNav() {
               initialWishlistCount={wishlistCount}
               initialCartCount={cartCount}
             />
+          ) : staffDashboard ? (
+            <>
+              <AccountMenu dashboardHref={staffDashboard} />
+              <Link
+                href="/register/advertiser"
+                className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
+              >
+                Advertise
+              </Link>
+              <Link
+                href="/register/owner"
+                className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
+              >
+                List spaces
+              </Link>
+            </>
           ) : (
             <>
-              {dashboardHref ? (
-                <Link
-                  href={dashboardHref}
-                  className="font-medium text-slate-600 hover:text-[#4C4BFF]"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link href="/login" className="font-medium text-slate-600 hover:text-[#4C4BFF]">
-                  Sign in
-                </Link>
-              )}
+              <Link href="/login" className="font-medium text-slate-600 hover:text-[#4C4BFF]">
+                Sign in
+              </Link>
               <Link
                 href="/register/advertiser"
                 className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
