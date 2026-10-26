@@ -39,7 +39,7 @@ export function OwnerSidebar({
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-white/10 bg-[#12101f] text-white">
+    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-white/10 tabellone-pane text-white">
       <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-6">
         <Link href="/" className="block">
           <span className="tabellone-gradient text-2xl font-bold tracking-tight">

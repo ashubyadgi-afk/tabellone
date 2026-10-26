@@ -18,6 +18,16 @@ body {
     -webkit-text-fill-color: transparent;
   }
 
+  .tabellone-pane {
+    background: linear-gradient(
+      to bottom,
+      #2e2db8 0%,
+      #4c2a96 32%,
+      #7a245c 64%,
+      #9a3e12 100%
+    );
+  }
+
   .hero-glow {
     background: radial-gradient(
       ellipse 80% 60% at 50% -20%,
