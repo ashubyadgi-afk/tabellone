@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Megaphone } from "lucide-react";
+import { AuthBrandPane } from "@/components/auth/AuthBrandPane";
 import { Button, Input, Label } from "@/components/ui";
 
 export function LoginForm() {
@@ -31,25 +31,7 @@ export function LoginForm() {
 
   return (
     <div className="flex min-h-screen">
-      <div className="tabellone-pane hidden w-1/2 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="flex items-center gap-2 text-white">
-          <Megaphone className="h-8 w-8 text-orange-200" />
-          <span className="text-2xl font-bold">Tabellone</span>
-        </div>
-        <div>
-          <h2 className="text-3xl font-bold text-white">
-            Your advertising ecosystem
-          </h2>
-          <p className="mt-4 leading-relaxed text-white/80">
-            Owners manage inventory. Advertisers book campaigns. Admins oversee the marketplace.
-          </p>
-        </div>
-        <div className="space-y-2 text-sm text-white/75">
-          <p>Demo owner: owner@demo.tabellone.com / demo1234</p>
-          <p>Demo advertiser: advertiser@demo.tabellone.com / demo1234</p>
-          <p>Demo admin: admin@tabellone.com / admin1234</p>
-        </div>
-      </div>
+      <AuthBrandPane showDemoLogins />
 
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="w-full max-w-md">

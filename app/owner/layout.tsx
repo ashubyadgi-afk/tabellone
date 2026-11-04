@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { LogOut, UserCircle } from "lucide-react";
 import { getLiveSession, redirectToRoleArea } from "@/lib/auth/live-session";
 import { prisma } from "@/lib/db";
 import { OwnerSidebar } from "@/components/layout/OwnerSidebar";
@@ -32,9 +34,26 @@ export default async function OwnerLayout({
             <p className="text-sm text-slate-500">
               Phase 1 · Inventory Management Dashboard
             </p>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-              IMD Active
-            </span>
+            <div className="flex items-center gap-1">
+              <Link
+                href="/owner/profile/edit"
+                aria-label="Profile"
+                title="Profile"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <UserCircle className="h-5 w-5" />
+              </Link>
+              <form action="/api/v1/auth/logout" method="POST">
+                <button
+                  type="submit"
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </form>
+            </div>
           </div>
         </header>
         <main className="flex-1 p-6 lg:p-8 print:p-0">{children}</main>

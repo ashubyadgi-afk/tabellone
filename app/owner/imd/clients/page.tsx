@@ -35,7 +35,7 @@ export default async function ClientsPage() {
               <th className="px-6 py-4">Business</th>
               <th className="px-6 py-4">Contact</th>
               <th className="px-6 py-4">Bookings</th>
-              <th className="px-6 py-4">Added</th>
+              <th className="px-6 py-4">Client Added on</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

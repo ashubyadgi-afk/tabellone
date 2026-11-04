@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   Layers,
   Users,
   CalendarDays,
@@ -13,13 +12,10 @@ import {
   Megaphone,
   ChevronRight,
   Store,
-  UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/owner/profile/edit", label: "Profile", icon: UserCircle },
   { href: "/owner/imd", label: "IMD Overview", icon: Megaphone },
   { href: "/owner/marketplace", label: "List on Marketplace", icon: Store },
   { href: "/owner/imd/ad-spaces", label: "Ad Spaces", icon: Layers },
@@ -37,6 +33,7 @@ export function OwnerSidebar({
   userEmail: string;
 }) {
   const pathname = usePathname();
+  const profileActive = pathname.startsWith("/owner/profile");
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-white/10 tabellone-pane text-white">
@@ -58,9 +55,7 @@ export function OwnerSidebar({
         {nav.map((item) => {
           const active =
             pathname === item.href ||
-            (item.href !== "/owner/dashboard" &&
-              item.href !== "/owner/imd" &&
-              pathname.startsWith(item.href));
+            (item.href !== "/owner/imd" && pathname.startsWith(item.href));
           const imdActive =
             item.href === "/owner/imd" && pathname === "/owner/imd";
 
@@ -86,12 +81,18 @@ export function OwnerSidebar({
       </nav>
 
       <div className="shrink-0 border-t border-white/10 p-4">
-        <div className="rounded-xl bg-white/5 p-3">
+        <Link
+          href="/owner/profile/edit"
+          className={cn(
+            "block rounded-xl p-3 transition hover:bg-white/10",
+            profileActive ? "bg-[#4C4BFF]/20" : "bg-white/5"
+          )}
+        >
           <p className="truncate text-sm font-medium text-white">
             {organizationName}
           </p>
           <p className="truncate text-xs text-slate-400">{userEmail}</p>
-        </div>
+        </Link>
         <form action="/api/v1/auth/logout" method="POST" className="mt-3">
           <button
             type="submit"

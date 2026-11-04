@@ -58,13 +58,13 @@ export async function PublicNav() {
                 href="/register/advertiser"
                 className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
               >
-                Advertise
+                I am Advertiser
               </Link>
               <Link
                 href="/register/owner"
                 className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
               >
-                List spaces
+                I am Owner
               </Link>
             </>
           ) : (
@@ -76,13 +76,13 @@ export async function PublicNav() {
                 href="/register/advertiser"
                 className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
               >
-                Advertise
+                I am Advertiser
               </Link>
               <Link
                 href="/register/owner"
                 className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
               >
-                List spaces
+                I am Owner
               </Link>
             </>
           )}

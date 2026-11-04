@@ -62,7 +62,7 @@ export default function EditOwnerProfilePage() {
       setError(data.error?.message || "Failed to update profile");
       return;
     }
-    router.push("/owner/dashboard");
+    router.push("/owner/imd");
     router.refresh();
   }
 
@@ -152,7 +152,7 @@ export default function EditOwnerProfilePage() {
               <Button type="submit" disabled={loading}>
                 {loading ? "Saving…" : "Save profile"}
               </Button>
-              <Link href="/owner/dashboard">
+              <Link href="/owner/imd">
                 <Button type="button" variant="secondary">
                   Cancel
                 </Button>

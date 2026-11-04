@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Megaphone } from "lucide-react";
+import { AuthBrandPane } from "@/components/auth/AuthBrandPane";
 import { Button, Input, Label } from "@/components/ui";
 
 export default function RegisterAdvertiserPage() {
@@ -42,21 +42,9 @@ export default function RegisterAdvertiserPage() {
 
   return (
     <div className="flex min-h-screen">
-      <div className="hidden w-1/2 bg-gradient-to-br from-orange-500 to-orange-600 lg:flex lg:flex-col lg:justify-between lg:p-12 text-white">
-        <div className="flex items-center gap-2">
-          <Megaphone className="h-8 w-8" />
-          <span className="text-2xl font-bold">Tabellone</span>
-        </div>
-        <div>
-          <h2 className="text-3xl font-bold">Advertise on premium AdSpaces</h2>
-          <p className="mt-4 text-orange-100 leading-relaxed">
-            Search, wishlist, campaign planning, booking requests, and secure payments.
-          </p>
-        </div>
-        <p className="text-sm text-orange-200">Free plan included</p>
-      </div>
+      <AuthBrandPane />
 
-      <div className="flex flex-1 items-center justify-center p-8">
+      <div className="flex h-screen min-w-0 flex-1 items-center justify-center overflow-y-auto p-8">
         <div className="w-full max-w-md">
           <h1 className="text-2xl font-bold text-slate-900">Create advertiser account</h1>
           <p className="mt-2 text-slate-500">Start booking AdSpaces today</p>

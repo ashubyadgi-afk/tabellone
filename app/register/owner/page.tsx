@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AuthBrandPane } from "@/components/auth/AuthBrandPane";
 import { Button, Input, Label } from "@/components/ui";
 
 export default function RegisterOwnerPage() {
@@ -38,12 +39,11 @@ export default function RegisterOwnerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
-      <div className="mx-auto max-w-lg">
-        <Link href="/" className="text-sm font-semibold text-[#1e3a5f] hover:underline">
-          ← Tabellone
-        </Link>
-        <h1 className="mt-6 text-2xl font-bold text-slate-900">Register as AdSpace Owner</h1>
+    <div className="flex min-h-screen">
+      <AuthBrandPane />
+      <div className="flex h-screen min-w-0 flex-1 items-center justify-center overflow-y-auto p-8">
+        <div className="my-auto w-full max-w-md py-8">
+        <h1 className="text-2xl font-bold text-slate-900">Register as AdSpace Owner</h1>
         <p className="mt-2 text-slate-500">Create your organization and access IMD</p>
 
         {error && (
@@ -52,7 +52,7 @@ export default function RegisterOwnerPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
             <Label>Organization name *</Label>
             <Input
@@ -112,6 +112,7 @@ export default function RegisterOwnerPage() {
             Sign in
           </Link>
         </p>
+        </div>
       </div>
     </div>
   );
