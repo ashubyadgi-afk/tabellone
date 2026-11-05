@@ -15,7 +15,7 @@ export function AccountMenu({ dashboardHref }: { dashboardHref: string }) {
         aria-expanded={open}
         suppressHydrationWarning
         onClick={() => setOpen((current) => !current)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100"
+        className="relative rounded-lg p-2 text-slate-900/70 transition-colors duration-300 hover:bg-slate-100 hover:text-slate-900"
       >
         <User className="h-5 w-5" />
       </button>

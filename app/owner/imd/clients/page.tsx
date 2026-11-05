@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { HoverInfo } from "@/components/owner/HoverInfo";
 import { PageHeader, Button, Card } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { formatDate } from "@/lib/utils";
@@ -48,7 +49,20 @@ export default async function ClientsPage() {
             ) : (
               items.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50/50">
-                  <td className="px-6 py-4 font-medium">{c.name}</td>
+                  <td className="px-6 py-4 font-medium">
+                    <HoverInfo
+                      label={c.name}
+                      title={c.name}
+                      rows={[
+                        { label: "Business", value: c.businessName || "—" },
+                        { label: "Email", value: c.email || "—" },
+                        { label: "Phone", value: c.contactPhone || "—" },
+                        { label: "Address", value: c.address || "—" },
+                        { label: "Added on", value: formatDate(c.createdAt) },
+                        { label: "Bookings", value: String(c.bookings.length) },
+                      ]}
+                    />
+                  </td>
                   <td className="px-6 py-4 text-slate-600">{c.businessName || "—"}</td>
                   <td className="px-6 py-4 text-slate-600">
                     {c.email || c.contactPhone || "—"}

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { BOOKING_STATUS_LABELS } from "@/lib/services/imd.service";
+import { BOOKING_STATUS_LABELS, IMD_STATUS_LABELS } from "@/lib/services/imd.service";
+import { adSpaceTypeLabel } from "@/lib/marketplace/search";
+import { HoverInfo } from "@/components/owner/HoverInfo";
 import { PageHeader, Button, Card, Badge } from "@/components/ui";
 import { Plus } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -14,7 +16,11 @@ export default async function BookingsPage() {
   const items = await prisma.booking.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { startDate: "desc" },
-    include: { adSpace: true, client: true, invoice: true },
+    include: {
+      adSpace: true,
+      client: { include: { _count: { select: { bookings: true } } } },
+      invoice: true,
+    },
   });
 
   return (
@@ -57,8 +63,34 @@ export default async function BookingsPage() {
             ) : (
               items.map((b) => (
                 <tr key={b.id} className="hover:bg-slate-50/50">
-                  <td className="px-6 py-4 font-medium">{b.adSpace.name}</td>
-                  <td className="px-6 py-4">{b.client.name}</td>
+                  <td className="px-6 py-4 font-medium">
+                    <HoverInfo
+                      label={b.adSpace.name}
+                      title={b.adSpace.name}
+                      rows={[
+                        { label: "Type", value: adSpaceTypeLabel(b.adSpace.adSpaceType) || "—" },
+                        { label: "City", value: [b.adSpace.city, b.adSpace.state].filter(Boolean).join(", ") || "—" },
+                        { label: "Address", value: b.adSpace.address || "—" },
+                        { label: "Size", value: b.adSpace.dimensions || "—" },
+                        { label: "Status", value: IMD_STATUS_LABELS[b.adSpace.imdStatus] },
+                        { label: "Base price", value: b.adSpace.basePrice ? formatCurrency(b.adSpace.basePrice) : "—" },
+                      ]}
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    <HoverInfo
+                      label={b.client.name}
+                      title={b.client.name}
+                      rows={[
+                        { label: "Business", value: b.client.businessName || "—" },
+                        { label: "Email", value: b.client.email || "—" },
+                        { label: "Phone", value: b.client.contactPhone || "—" },
+                        { label: "Address", value: b.client.address || "—" },
+                        { label: "Added on", value: formatDate(b.client.createdAt) },
+                        { label: "Bookings", value: String(b.client._count.bookings) },
+                      ]}
+                    />
+                  </td>
                   <td className="px-6 py-4 text-slate-600">
                     {formatDate(b.startDate)} – {formatDate(b.endDate)}
                   </td>

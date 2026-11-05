@@ -50,7 +50,7 @@ export function AdvertiserNav({
   }, []);
 
   const iconClass =
-    "relative flex h-10 w-10 items-center justify-center rounded-full text-slate-700 hover:bg-slate-100";
+    "relative rounded-lg p-2 text-slate-900/70 transition-colors duration-300 hover:bg-slate-100 hover:text-slate-900";
 
   return (
     <div className="flex items-center gap-1">
