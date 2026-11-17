@@ -8,16 +8,22 @@ import {
   CalendarClock,
   CreditCard,
   Crown,
+  LifeBuoy,
   LogOut,
+  Receipt,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/advertiser/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/advertiser/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/advertiser/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/advertiser/booking-requests", label: "Bookings", icon: CalendarClock },
-  { href: "/advertiser/subscription", label: "Subscription", icon: Crown },
+  { href: "/advertiser/payments", label: "Payments", icon: Receipt },
   { href: "/advertiser/wallet", label: "Wallet", icon: CreditCard },
+  { href: "/advertiser/subscription", label: "Subscription", icon: Crown },
+  { href: "/advertiser/concerns", label: "Queries", icon: LifeBuoy },
+  { href: "/advertiser/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdvertiserSidebar({

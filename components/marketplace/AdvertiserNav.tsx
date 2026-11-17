@@ -80,7 +80,7 @@ export function AdvertiserNav({
               className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
               onClick={() => setAccountOpen(false)}
             >
-              Dashboard
+              Overview
             </Link>
             <Link
               href="/advertiser/booking-requests"

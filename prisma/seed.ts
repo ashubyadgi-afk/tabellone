@@ -235,7 +235,7 @@ async function main() {
     });
 
     await prisma.wallet.create({
-      data: { organizationId: advOrg.id, balance: 50000 },
+      data: { organizationId: advOrg.id },
     });
 
     if (freePlan) {

@@ -110,6 +110,22 @@ enum PaymentMethod {
   bank_transfer
 }
 
+enum ConcernTopic {
+  booking
+  payment
+  campaign
+  ad_space
+  wallet
+  account
+  other
+}
+
+enum ConcernStatus {
+  open
+  in_review
+  resolved
+}
+
 enum NotificationType {
   listing
   booking
@@ -163,6 +179,7 @@ model Organization {
   payments           Payment[]
   subscriptions      Subscription[]
   notifications      Notification[]
+  concerns           Concern[]
 
   @@map("organizations")
 }
@@ -530,4 +547,19 @@ model Subscription {
   plan         SubscriptionPlan @relation(fields: [planId], references: [id])
 
   @@map("subscriptions")
+}
+
+model Concern {
+  id             String        @id @default(uuid())
+  organizationId String        @map("organization_id")
+  topic          ConcernTopic
+  subject        String
+  message        String
+  status         ConcernStatus @default(open)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("concerns")
 }
