@@ -60,14 +60,14 @@ export function AiSearchBar({ compact }: { compact?: boolean }) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && search()}
             placeholder="AI search: e.g. billboard in Mumbai under 1 lakh"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-sm shadow-sm focus:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+            className="w-full rounded-2xl border border-[#8C47EE]/20 bg-white py-3.5 pl-11 pr-4 text-sm shadow-sm focus:border-[#8C47EE]/50 focus:outline-none focus:ring-2 focus:ring-[#8C47EE]/20"
             suppressHydrationWarning
           />
         </div>
         <button
           onClick={search}
           disabled={loading}
-          className="flex items-center gap-2 rounded-2xl bg-[#1e3a5f] px-5 py-3.5 text-sm font-semibold text-white hover:bg-[#2d4a6f] disabled:opacity-50"
+          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE] px-5 py-3.5 text-sm font-semibold text-white shadow-md shadow-[#4C4BFF]/30 transition hover:-translate-y-0.5 hover:from-[#3d3ce8] hover:to-[#7a3cd9] disabled:opacity-50"
           suppressHydrationWarning
         >
           <Search className="h-4 w-4" />

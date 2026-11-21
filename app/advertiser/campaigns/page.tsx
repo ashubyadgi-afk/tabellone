@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PageHeader, Button, Input, Label, Badge } from "@/components/ui";
+import { Button, Input, Label, Badge } from "@/components/ui";
+import {
+  CountPill,
+  EmptyState,
+  PageBanner,
+  Panel,
+  TotalCard,
+} from "@/components/advertiser/AdvertiserUI";
+import { ArrowUpRight, CheckCircle2, Megaphone, Plus, XCircle, type LucideIcon } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 type Campaign = {
@@ -42,31 +50,37 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
       : "Dates not set";
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4">
+    <article className="rounded-xl bg-white p-4 ring-1 ring-slate-200/70 transition hover:shadow-[0_8px_20px_-12px_rgba(76,75,255,0.35)] hover:ring-[#4C4BFF]/25">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-semibold text-slate-900">{campaign.name}</h3>
+        <h3 className="font-semibold tracking-tight text-slate-900">{campaign.name}</h3>
         <Badge variant={outcomeVariant(state)}>{state}</Badge>
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
         <div>
-          <dt className="text-xs text-slate-400">Sector</dt>
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Sector</dt>
           <dd className="text-slate-700">{campaign.sector || "—"}</dd>
         </div>
         <div>
-          <dt className="text-xs text-slate-400">Location</dt>
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Location</dt>
           <dd className="text-slate-700">{campaign.targetLocation || "Any"}</dd>
         </div>
         <div>
-          <dt className="text-xs text-slate-400">Budget</dt>
-          <dd className="text-slate-700">{campaign.budget ? formatCurrency(campaign.budget) : "—"}</dd>
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Budget</dt>
+          <dd className="font-medium text-slate-800 tabular-nums">
+            {campaign.budget ? formatCurrency(campaign.budget) : "—"}
+          </dd>
         </div>
         <div>
-          <dt className="text-xs text-slate-400">Dates</dt>
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Dates</dt>
           <dd className="text-slate-700">{dates}</dd>
         </div>
       </dl>
-      <Link href="/marketplace" className="mt-3 inline-block text-sm font-medium text-[#4C4BFF] hover:underline">
+      <Link
+        href="/marketplace"
+        className="mt-3 inline-flex items-center gap-1 border-t border-slate-100 pt-3 text-sm font-medium text-[#4C4BFF] hover:text-[#3d3ce8]"
+      >
         Find AdSpaces
+        <ArrowUpRight className="h-3.5 w-3.5" />
       </Link>
     </article>
   );
@@ -75,28 +89,26 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 function CampaignColumn({
   title,
   empty,
+  icon,
   campaigns,
 }: {
   title: string;
   empty: string;
+  icon: LucideIcon;
   campaigns: Campaign[];
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-slate-900">{title}</h2>
-        <span className="text-sm text-slate-500">{campaigns.length}</span>
-      </div>
+    <Panel title={title} icon={icon} aside={<CountPill value={campaigns.length} />} bodyClassName="bg-slate-50/50 p-3">
       {campaigns.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">{empty}</p>
+        <EmptyState icon={icon} text={empty} />
       ) : (
-        <div className="mt-4 space-y-3">
+        <div className="space-y-3">
           {campaigns.map((campaign) => (
             <CampaignCard key={campaign.id} campaign={campaign} />
           ))}
         </div>
       )}
-    </section>
+    </Panel>
   );
 }
 
@@ -140,49 +152,41 @@ export default function AdvertiserCampaignsPage() {
 
   return (
     <div>
-      <PageHeader title="Campaigns" description="Plan campaigns, then see which ones were accepted or rejected" />
+      <PageBanner title="Campaigns" description="Plan campaigns, then see which ones were accepted or rejected" />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">All campaigns</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{campaigns.length}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">Accepted</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{accepted.length}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">Rejected</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{rejected.length}</p>
-        </div>
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <TotalCard label="All campaigns" value={campaigns.length} icon={Megaphone} accent="indigo" />
+        <TotalCard label="Accepted" value={accepted.length} icon={CheckCircle2} accent="emerald" />
+        <TotalCard label="Rejected" value={rejected.length} icon={XCircle} accent="slate" />
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[320px_1fr]">
-        <form onSubmit={create} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">New campaign</h2>
-          <div>
-            <Label>Campaign name *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div>
-            <Label>Sector</Label>
-            <Input value={sector} onChange={(e) => setSector(e.target.value)} />
-          </div>
-          <div>
-            <Label>Budget (₹)</Label>
-            <Input type="number" value={budget} onChange={(e) => setBudget(e.target.value)} />
-          </div>
-          <div>
-            <Label>Target location</Label>
-            <Input value={location} onChange={(e) => setLocation(e.target.value)} />
-          </div>
-          <Button type="submit" className="w-full">Create campaign</Button>
-        </form>
+        <Panel title="New campaign" icon={Plus}>
+          <form onSubmit={create} className="space-y-4">
+            <div>
+              <Label>Campaign name *</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div>
+              <Label>Sector</Label>
+              <Input value={sector} onChange={(e) => setSector(e.target.value)} />
+            </div>
+            <div>
+              <Label>Budget (₹)</Label>
+              <Input type="number" value={budget} onChange={(e) => setBudget(e.target.value)} />
+            </div>
+            <div>
+              <Label>Target location</Label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} />
+            </div>
+            <Button type="submit" className="w-full">Create campaign</Button>
+          </form>
+        </Panel>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          <CampaignColumn title="Your campaigns" empty="No campaigns yet." campaigns={campaigns} />
-          <CampaignColumn title="Accepted" empty="No accepted campaigns yet." campaigns={accepted} />
-          <CampaignColumn title="Rejected" empty="No rejected campaigns yet." campaigns={rejected} />
+        <div className="grid items-start gap-4 lg:grid-cols-3">
+          <CampaignColumn title="Your campaigns" empty="No campaigns yet." icon={Megaphone} campaigns={campaigns} />
+          <CampaignColumn title="Accepted" empty="No accepted campaigns yet." icon={CheckCircle2} campaigns={accepted} />
+          <CampaignColumn title="Rejected" empty="No rejected campaigns yet." icon={XCircle} campaigns={rejected} />
         </div>
       </div>
     </div>

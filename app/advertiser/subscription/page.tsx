@@ -1,7 +1,9 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { PageHeader, Badge } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { Badge } from "@/components/ui";
+import { PageBanner, SURFACE } from "@/components/advertiser/AdvertiserUI";
+import { Crown } from "lucide-react";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 export default async function AdvertiserSubscriptionPage() {
   const session = await getSession();
@@ -20,35 +22,49 @@ export default async function AdvertiserSubscriptionPage() {
 
   return (
     <div>
-      <PageHeader title="Subscription" description="Manage your Tabellone plan" />
+      <PageBanner title="Subscription" description="Manage your Tabellone plan" />
       {subscription && (
-        <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-          <p className="font-semibold text-emerald-900">
-            Current plan: {subscription.plan.name}
-          </p>
-          <p className="text-sm text-emerald-700">
-            {formatCurrency(subscription.plan.priceMonthly)}/month ·
-            Expires {formatDate(subscription.expiresAt)}
-          </p>
-          <div className="mt-2">
-            <Badge variant="success">{subscription.status}</Badge>
+        <div className={cn(SURFACE, "relative mb-8 flex flex-wrap items-center gap-4 overflow-hidden p-6")}>
+          <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#4C4BFF] to-[#8C47EE]" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4C4BFF] to-[#8C47EE] text-white">
+            <Crown className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-semibold tracking-tight text-slate-900">
+              Current plan: {subscription.plan.name}
+            </p>
+            <p className="text-sm text-slate-500">
+              {formatCurrency(subscription.plan.priceMonthly)}/month ·
+              Expires {formatDate(subscription.expiresAt)}
+            </p>
           </div>
+          <Badge variant="success">{subscription.status}</Badge>
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {plans.map((plan) => (
-          <div
-            key={plan.id}
-            className="rounded-2xl border border-slate-200 bg-white p-6"
-          >
-            <p className="font-semibold text-slate-900">{plan.name}</p>
-            <p className="mt-2 text-2xl font-bold text-[#1e3a5f]">
-              {formatCurrency(plan.priceMonthly)}
-              <span className="text-sm font-normal text-slate-500">/mo</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-500">{plan.features}</p>
-          </div>
-        ))}
+        {plans.map((plan) => {
+          const current = subscription?.planId === plan.id;
+          return (
+            <div
+              key={plan.id}
+              className={cn(
+                SURFACE,
+                "relative overflow-hidden p-6 transition hover:-translate-y-0.5",
+                current && "ring-2 ring-[#4C4BFF]/60"
+              )}
+            >
+              {current ? (
+                <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE]" />
+              ) : null}
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">{plan.name}</p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 tabular-nums">
+                {formatCurrency(plan.priceMonthly)}
+                <span className="text-sm font-normal text-slate-500">/mo</span>
+              </p>
+              <p className="mt-3 border-t border-slate-100 pt-3 text-sm leading-relaxed text-slate-500">{plan.features}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

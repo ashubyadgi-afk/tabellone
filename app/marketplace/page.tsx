@@ -68,27 +68,34 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
       : "";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-[#F3F2FF] via-[#F8F7FF] to-[#FFF6EF]">
       <PublicNav />
 
-      <div className="mx-auto max-w-7xl px-6 pt-8">
-        <h1 className="text-3xl font-bold text-[#1e3a5f]">Browse AdSpaces</h1>
-        <p className="mt-2 text-slate-500">
-          {spaces.length} verified listing{spaces.length !== 1 ? "s" : ""}{" "}
-          available
-          {params.type ? ` · ${params.type}` : ""}
-          {params.location || params.city
-            ? ` · ${params.location || params.city}`
-            : ""}
-          {params.size ? ` · ${params.size}` : ""}
-          {params.minSize ? ` · ${params.minSize}+` : ""}
-          {params.availMonths ? ` · ${params.availMonths}+ months` : ""}
-          {params.minRating ? ` · ${params.minRating}★+` : ""}
-          {dateRange}
-        </p>
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#E9EBFF] via-[#F6EFFF] to-[#FFF1E6]">
+        <div className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-[#4C4BFF]/20 blur-3xl" />
+        <div className="pointer-events-none absolute right-10 -top-10 h-64 w-64 rounded-full bg-[#E647A7]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 right-1/3 h-56 w-56 rounded-full bg-[#FF8C3A]/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-6 pb-8 pt-10">
+          <h1 className="text-3xl font-bold text-slate-900 lg:text-4xl">
+            Browse <span className="tabellone-gradient">AdSpaces</span>
+          </h1>
+          <p className="mt-2 text-slate-600">
+            {spaces.length} verified listing{spaces.length !== 1 ? "s" : ""}{" "}
+            available
+            {params.type ? ` · ${params.type}` : ""}
+            {params.location || params.city
+              ? ` · ${params.location || params.city}`
+              : ""}
+            {params.size ? ` · ${params.size}` : ""}
+            {params.minSize ? ` · ${params.minSize}+` : ""}
+            {params.availMonths ? ` · ${params.availMonths}+ months` : ""}
+            {params.minRating ? ` · ${params.minRating}★+` : ""}
+            {dateRange}
+          </p>
+        </div>
       </div>
 
-      <div className="sticky top-16 z-40 mt-4 border-y border-slate-200/80 bg-slate-50/95 shadow-sm backdrop-blur-md">
+      <div className="sticky top-16 z-40 border-b border-[#4C4BFF]/10 bg-gradient-to-r from-[#F1F0FF]/95 via-white/95 to-[#FFF3EA]/95 shadow-md shadow-[#4C4BFF]/5 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-6 py-3">
           <MarketplaceSearchForm
             key={[
@@ -127,7 +134,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
           ) : null}
           <div className="min-w-0 flex-1">
             {priced.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
+              <div className="rounded-2xl border border-[#4C4BFF]/15 bg-gradient-to-br from-white to-[#F3F2FF] p-12 text-center shadow-sm">
                 <p className="text-slate-500">
                   No listings match those filters. Sample spaces are available{" "}
                   <span className="font-medium text-slate-700">

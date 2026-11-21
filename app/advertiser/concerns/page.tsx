@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader, Button, Input, Label, Select, Badge } from "@/components/ui";
+import { Button, Input, Label, Select, Badge } from "@/components/ui";
+import {
+  CountPill,
+  EmptyState,
+  PageBanner,
+  Panel,
+  TotalCard,
+} from "@/components/advertiser/AdvertiserUI";
+import { CheckCircle2, CircleDot, MessageSquarePlus, MessagesSquare, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 type ConcernStatus = "open" | "in_review" | "resolved";
@@ -80,85 +88,81 @@ export default function AdvertiserConcernsPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Queries"
         description="Raise a query about a booking, payment, campaign, or anything else, and see every query here"
       />
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">Open</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{open}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">In review</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{inReview}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">Resolved</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{resolved}</p>
-        </div>
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <TotalCard label="Open" value={open} icon={CircleDot} accent="amber" />
+        <TotalCard label="In review" value={inReview} icon={Search} accent="indigo" />
+        <TotalCard label="Resolved" value={resolved} icon={CheckCircle2} accent="emerald" />
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[320px_1fr]">
-        <form onSubmit={create} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">Raise a query</h2>
-          <div>
-            <Label>About</Label>
-            <Select value={topic} onChange={(event) => setTopic(event.target.value as ConcernTopic)}>
-              {TOPICS.map((item) => (
-                <option key={item.value} value={item.value}>
-                  {item.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label>Subject *</Label>
-            <Input value={subject} onChange={(event) => setSubject(event.target.value)} required />
-          </div>
-          <div>
-            <Label>Message *</Label>
-            <textarea
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              required
-              rows={5}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/15"
-            />
-          </div>
-          {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-          <Button type="submit" className="w-full">
-            Submit query
-          </Button>
-        </form>
+      <div className="grid items-start gap-6 xl:grid-cols-[340px_1fr]">
+        <Panel title="Raise a query" icon={MessageSquarePlus}>
+          <form onSubmit={create} className="space-y-4">
+            <div>
+              <Label>About</Label>
+              <Select value={topic} onChange={(event) => setTopic(event.target.value as ConcernTopic)}>
+                {TOPICS.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <Label>Subject *</Label>
+              <Input value={subject} onChange={(event) => setSubject(event.target.value)} required />
+            </div>
+            <div>
+              <Label>Message *</Label>
+              <textarea
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                required
+                rows={5}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/15"
+              />
+            </div>
+            {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+            <Button type="submit" className="w-full">
+              Submit query
+            </Button>
+          </form>
+        </Panel>
 
-        <section className="rounded-2xl border border-slate-200 bg-white">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <h2 className="font-semibold text-slate-900">All queries</h2>
-            <span className="text-sm text-slate-500">{concerns.length}</span>
-          </div>
+        <Panel
+          title="All queries"
+          icon={MessagesSquare}
+          aside={<CountPill value={concerns.length} />}
+          bodyClassName="p-0"
+        >
           {concerns.length === 0 ? (
-            <p className="px-5 py-8 text-sm text-slate-500">No queries yet.</p>
+            <EmptyState icon={MessagesSquare} text="No queries yet." />
           ) : (
             <ul className="divide-y divide-slate-100">
               {concerns.map((concern) => (
-                <li key={concern.id} className="px-5 py-4">
+                <li key={concern.id} className="px-5 py-4 transition hover:bg-slate-50/80">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900">{concern.subject}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {topicLabel(concern.topic)} · {formatDate(concern.createdAt)}
+                    <div className="min-w-0">
+                      <p className="font-semibold tracking-tight text-slate-900">{concern.subject}</p>
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                        <span className="rounded-md bg-[#4C4BFF]/10 px-1.5 py-0.5 font-medium text-[#4C4BFF]">
+                          {topicLabel(concern.topic)}
+                        </span>
+                        {formatDate(concern.createdAt)}
                       </p>
                     </div>
                     <Badge variant={statusVariant(concern.status)}>{STATUS_LABEL[concern.status]}</Badge>
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">{concern.message}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{concern.message}</p>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Panel>
       </div>
     </div>
   );

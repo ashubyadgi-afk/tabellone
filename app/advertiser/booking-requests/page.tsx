@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader, Button, Badge } from "@/components/ui";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { Button, Badge } from "@/components/ui";
+import {
+  EmptyState,
+  PageBanner,
+  Panel,
+  SURFACE,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TotalCard,
+} from "@/components/advertiser/AdvertiserUI";
+import { CalendarClock, CheckCircle2, History, IndianRupee, MapPin } from "lucide-react";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 type Request = {
   id: string;
@@ -73,64 +83,76 @@ export default function AdvertiserBookingRequestsPage() {
 
   return (
     <div>
-      <PageHeader title="Booking requests" description="Track and pay for approved bookings" />
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">All bookings</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{requests.length}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">Asked amount</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">
-            {formatCurrency(requests.reduce((sum, request) => sum + request.customerPrice, 0))}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
-          <p className="text-sm text-slate-500">Paid</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900">{formatCurrency(paidTotal)}</p>
-        </div>
-      </div>
-      <div className="space-y-4">
-        {requests.map((req) => (
-          <div
-            key={req.id}
-            className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5"
-          >
-            <div>
-              <p className="font-semibold text-slate-900">{req.adSpace.name}</p>
-              <p className="text-sm text-slate-500">
-                {req.adSpace.city ? `${req.adSpace.city} · ` : ""}
-                {formatDate(req.startDate)} → {formatDate(req.endDate)}
-              </p>
-              {req.campaign ? <p className="text-xs text-slate-400">{req.campaign.name}</p> : null}
-              <p className="mt-1 font-medium text-[#1e3a5f]">
-                {formatCurrency(req.customerPrice)}
-              </p>
-              <Badge variant={statusVariant(req.status)}>{statusLabel(req.status)}</Badge>
-            </div>
-            {req.status === "payment_pending" && (
-              <Button size="sm" onClick={() => pay(req.id)}>
-                Pay now (UPI)
-              </Button>
-            )}
-          </div>
-        ))}
-        {requests.length === 0 && (
-          <p className="text-slate-500">No booking requests yet.</p>
-        )}
+      <PageBanner title="Booking requests" description="Track and pay for approved bookings" />
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <TotalCard label="All bookings" value={requests.length} icon={CalendarClock} accent="indigo" />
+        <TotalCard
+          label="Asked amount"
+          value={formatCurrency(requests.reduce((sum, request) => sum + request.customerPrice, 0))}
+          icon={IndianRupee}
+          accent="violet"
+        />
+        <TotalCard label="Paid" value={formatCurrency(paidTotal)} icon={CheckCircle2} accent="emerald" />
       </div>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-slate-900">Booking history</h2>
-        <p className="mt-1 text-sm text-slate-500">Every request, including paid, confirmed, and rejected bookings</p>
-        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      {requests.length === 0 ? (
+        <div className={SURFACE}>
+          <EmptyState icon={CalendarClock} text="No booking requests yet." />
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {requests.map((req) => (
+            <div
+              key={req.id}
+              className={cn(
+                SURFACE,
+                "flex flex-wrap items-center justify-between gap-4 p-5 transition hover:ring-[#4C4BFF]/25"
+              )}
+            >
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold tracking-tight text-slate-900">{req.adSpace.name}</p>
+                  <Badge variant={statusVariant(req.status)}>{statusLabel(req.status)}</Badge>
+                </div>
+                <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
+                  {req.adSpace.city ? (
+                    <>
+                      <MapPin className="h-3.5 w-3.5" />
+                      {`${req.adSpace.city} · `}
+                    </>
+                  ) : null}
+                  {formatDate(req.startDate)} → {formatDate(req.endDate)}
+                </p>
+                {req.campaign ? <p className="mt-0.5 text-xs text-slate-400">{req.campaign.name}</p> : null}
+                <p className="mt-2 text-lg font-semibold text-slate-900 tabular-nums">
+                  {formatCurrency(req.customerPrice)}
+                </p>
+              </div>
+              {req.status === "payment_pending" && (
+                <Button size="sm" onClick={() => pay(req.id)}>
+                  Pay now (UPI)
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Panel
+        className="mt-8"
+        title="Booking history"
+        description="Every request, including paid, confirmed, and rejected bookings"
+        icon={History}
+        bodyClassName="p-0"
+      >
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <thead className={TABLE_HEAD}>
               <tr>
                 <th className="px-5 py-3">Ad space</th>
                 <th className="px-5 py-3">Campaign</th>
                 <th className="px-5 py-3">Period</th>
-                <th className="px-5 py-3">Amount</th>
+                <th className="px-5 py-3 text-right">Amount</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Payment</th>
                 <th className="px-5 py-3">Submitted</th>
@@ -139,39 +161,41 @@ export default function AdvertiserBookingRequestsPage() {
             <tbody className="divide-y divide-slate-100">
               {requests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
-                    No booking history yet.
+                  <td colSpan={7}>
+                    <EmptyState icon={History} text="No booking history yet." />
                   </td>
                 </tr>
               ) : (
                 requests.map((req) => (
-                  <tr key={req.id}>
-                    <td className="px-5 py-3 font-medium text-slate-900">
+                  <tr key={req.id} className={TABLE_ROW}>
+                    <td className="px-5 py-3.5 font-medium text-slate-900">
                       {req.adSpace.name}
                       {req.reviewNotes ? (
                         <p className="mt-1 text-xs font-normal text-slate-500">{req.reviewNotes}</p>
                       ) : null}
                     </td>
-                    <td className="px-5 py-3 text-slate-600">{req.campaign?.name || "—"}</td>
-                    <td className="px-5 py-3 text-slate-600">
+                    <td className="px-5 py-3.5 text-slate-600">{req.campaign?.name || "—"}</td>
+                    <td className="px-5 py-3.5 whitespace-nowrap text-slate-600">
                       {formatDate(req.startDate)} – {formatDate(req.endDate)}
                     </td>
-                    <td className="px-5 py-3">{formatCurrency(req.customerPrice)}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3.5 text-right font-semibold text-slate-900 tabular-nums">
+                      {formatCurrency(req.customerPrice)}
+                    </td>
+                    <td className="px-5 py-3.5">
                       <Badge variant={statusVariant(req.status)}>{statusLabel(req.status)}</Badge>
                     </td>
-                    <td className="px-5 py-3 text-slate-600">
+                    <td className="px-5 py-3.5 text-slate-600">
                       {req.payment ? statusLabel(req.payment.status) : "—"}
                       {req.payment?.paidAt ? ` · ${formatDate(req.payment.paidAt)}` : ""}
                     </td>
-                    <td className="px-5 py-3 text-slate-500">{formatDate(req.submittedAt)}</td>
+                    <td className="px-5 py-3.5 whitespace-nowrap text-slate-500">{formatDate(req.submittedAt)}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-      </section>
+      </Panel>
     </div>
   );
 }

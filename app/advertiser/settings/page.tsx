@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Button, Card, Input, Label, PageHeader } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
+import { Badge, Button, Input, Label } from "@/components/ui";
+import { PageBanner, Panel, SURFACE } from "@/components/advertiser/AdvertiserUI";
+import { Building2, KeyRound, Mail } from "lucide-react";
+import { cn, formatDate } from "@/lib/utils";
 
 const VERIFICATION_LABEL: Record<string, string> = {
   draft: "Draft",
@@ -127,7 +129,7 @@ export default function AdvertiserSettingsPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Settings"
         description="Company details, tax numbers, and the password for this advertiser account"
       />
@@ -137,8 +139,8 @@ export default function AdvertiserSettingsPage() {
         <p className="text-sm text-slate-500">Loading…</p>
       ) : (
         <div className="space-y-5">
-          <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4C4BFF] to-[#8C47EE] text-xl font-bold text-white">
+          <section className={cn(SURFACE, "flex flex-wrap items-center gap-4 p-5")}>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4C4BFF] to-[#8C47EE] text-xl font-bold text-white shadow-lg shadow-[#4C4BFF]/30">
               {initial}
             </div>
             <div className="min-w-0 flex-1">
@@ -157,10 +159,9 @@ export default function AdvertiserSettingsPage() {
           </section>
 
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.85fr)]">
-            <form onSubmit={saveAccount} className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="font-semibold text-slate-900">Company and contact</h2>
-              <p className="mt-1 text-sm text-slate-500">How this advertiser appears on Tabellone</p>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <Panel title="Company and contact" description="How this advertiser appears on Tabellone" icon={Building2} bodyClassName="p-6">
+            <form onSubmit={saveAccount}>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <Label>Company name *</Label>
                   <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
@@ -209,24 +210,22 @@ export default function AdvertiserSettingsPage() {
                 </Button>
               </div>
             </form>
+            </Panel>
 
             <div className="space-y-5">
-              <Card className="p-6">
-                <h2 className="font-semibold text-slate-900">Sign-in</h2>
-                <p className="mt-1 text-sm text-slate-500">Used to enter this account</p>
-                <div className="mt-4">
+              <Panel title="Sign-in" description="Used to enter this account" icon={Mail}>
+                <div>
                   <Label>Email</Label>
                   <Input value={account.email} disabled />
                 </div>
                 <p className="mt-3 text-xs text-slate-400">
                   The email stays the same. Raise a query if it needs to change.
                 </p>
-              </Card>
+              </Panel>
 
-              <form onSubmit={changePassword} className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h2 className="font-semibold text-slate-900">Password</h2>
-                <p className="mt-1 text-sm text-slate-500">At least 8 characters</p>
-                <div className="mt-4 space-y-4">
+              <Panel title="Password" description="At least 8 characters" icon={KeyRound}>
+              <form onSubmit={changePassword}>
+                <div className="space-y-4">
                   <div>
                     <Label>Current password</Label>
                     <Input
@@ -266,6 +265,7 @@ export default function AdvertiserSettingsPage() {
                   </Button>
                 </div>
               </form>
+              </Panel>
             </div>
           </div>
         </div>

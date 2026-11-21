@@ -7,7 +7,7 @@ import { Heart, ShoppingCart, User } from "lucide-react";
 function CountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#4C4BFF] px-1 text-[10px] font-bold text-white">
+    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-br from-[#E647A7] to-[#FF8C3A] px-1 text-[10px] font-bold text-white shadow">
       {count}
     </span>
   );
@@ -49,16 +49,18 @@ export function AdvertiserNav({
     };
   }, []);
 
-  const iconClass =
-    "relative rounded-lg p-2 text-slate-900/70 transition-colors duration-300 hover:bg-slate-100 hover:text-slate-900";
+  const iconBase = "relative rounded-xl p-2 transition duration-300 hover:-translate-y-0.5";
+  const heartClass = `${iconBase} text-[#E647A7] hover:bg-[#E647A7]/10`;
+  const cartClass = `${iconBase} text-[#4C4BFF] hover:bg-[#4C4BFF]/10`;
+  const iconClass = `${iconBase} text-[#8C47EE] hover:bg-[#8C47EE]/10`;
 
   return (
     <div className="flex items-center gap-1">
-      <Link href="/wishlist" aria-label="Wishlist" className={iconClass}>
+      <Link href="/wishlist" aria-label="Wishlist" className={heartClass}>
         <Heart className={`h-5 w-5 ${wishlistCount > 0 ? "fill-rose-500 text-rose-500" : ""}`} />
         <CountBadge count={wishlistCount} />
       </Link>
-      <Link href="/cart" aria-label="Cart" className={iconClass}>
+      <Link href="/cart" aria-label="Cart" className={cartClass}>
         <ShoppingCart className="h-5 w-5" />
         <CountBadge count={cartCount} />
       </Link>

@@ -7,10 +7,12 @@ import { countCartItems } from "@/lib/services/cart.service";
 import { countWishlistItems } from "@/lib/services/wishlist.service";
 
 const linkClass =
-  "text-sm font-medium text-slate-900/70 transition-colors duration-300 hover:text-slate-900";
+  "relative text-sm font-semibold text-slate-700 transition-colors duration-300 hover:text-[#4C4BFF] after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-0 after:rounded-full after:bg-gradient-to-r after:from-[#4C4BFF] after:to-[#E647A7] after:transition-all after:duration-300 hover:after:w-full";
 
-const iconClass =
-  "rounded-lg p-2 text-slate-900/70 transition-colors duration-300 hover:bg-slate-100 hover:text-slate-900";
+const iconBase = "rounded-xl p-2 transition duration-300 hover:-translate-y-0.5";
+const heartClass = `${iconBase} text-[#E647A7] hover:bg-[#E647A7]/10`;
+const cartClass = `${iconBase} text-[#4C4BFF] hover:bg-[#4C4BFF]/10`;
+const userClass = `${iconBase} text-[#8C47EE] hover:bg-[#8C47EE]/10`;
 
 export async function PublicNav() {
   const session = await getSession();
@@ -30,9 +32,10 @@ export async function PublicNav() {
   return (
     <>
       <header
-        className="fixed inset-x-0 top-0 z-50 w-full border-b border-slate-200 bg-white shadow-sm"
+        className="fixed inset-x-0 top-0 z-50 w-full bg-gradient-to-r from-[#E9EBFF] via-white to-[#FFF1E6] shadow-md shadow-[#4C4BFF]/10 backdrop-blur"
         suppressHydrationWarning
       >
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-[#4C4BFF] via-[#E647A7] to-[#FF8C3A]" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center transition-opacity duration-300 hover:opacity-80">
@@ -64,29 +67,29 @@ export async function PublicNav() {
               ) : (
                 <>
                   <div className="hidden items-center gap-1 sm:flex">
-                    <Link href="/wishlist" aria-label="Wishlist" className={iconClass}>
+                    <Link href="/wishlist" aria-label="Wishlist" className={heartClass}>
                       <Heart className="h-5 w-5" />
                     </Link>
-                    <Link href="/cart" aria-label="Cart" className={iconClass}>
+                    <Link href="/cart" aria-label="Cart" className={cartClass}>
                       <ShoppingCart className="h-5 w-5" />
                     </Link>
                     {staffDashboard ? (
                       <AccountMenu dashboardHref={staffDashboard} />
                     ) : (
-                      <Link href="/login" aria-label="Account" className={iconClass}>
+                      <Link href="/login" aria-label="Account" className={userClass}>
                         <User className="h-5 w-5" />
                       </Link>
                     )}
                   </div>
                   <Link
                     href="/register/advertiser"
-                    className="rounded-xl bg-[#4C4BFF] px-4 py-2 font-semibold text-white hover:bg-[#3d3ce8]"
+                    className="rounded-xl bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE] px-4 py-2 font-semibold text-white shadow-md shadow-[#4C4BFF]/30 transition hover:-translate-y-0.5 hover:from-[#3d3ce8] hover:to-[#7a3cd9]"
                   >
                     I am Advertiser
                   </Link>
                   <Link
                     href="/register/owner"
-                    className="hidden rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50 sm:inline-block"
+                    className="hidden rounded-xl border border-[#FF8C3A]/50 bg-white/80 px-4 py-2 font-semibold text-orange-600 shadow-sm transition hover:-translate-y-0.5 hover:border-[#FF8C3A] hover:bg-orange-50 sm:inline-block"
                   >
                     I am Owner
                   </Link>

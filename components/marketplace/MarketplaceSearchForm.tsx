@@ -28,7 +28,7 @@ export function MarketplaceSearchForm({
     "w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition",
     dark
       ? "border-white/20 bg-white text-slate-900 focus:ring-2 focus:ring-orange-400/40"
-      : "border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-orange-500/20"
+      : "border-slate-200 bg-white text-slate-900 hover:border-[#4C4BFF]/40 focus:border-[#4C4BFF]/50 focus:ring-2 focus:ring-[#4C4BFF]/20"
   );
 
   return (
@@ -39,14 +39,14 @@ export function MarketplaceSearchForm({
         "rounded-2xl p-5",
         dark
           ? "border border-white/15 bg-white/10 backdrop-blur-md"
-          : "border border-slate-200 bg-white shadow-sm"
+          : "border border-slate-200 bg-white/95 shadow-sm"
       )}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <div>
           <label htmlFor="from" className={labelClass}>
             <span className="inline-flex items-center gap-1.5">
-              <CalendarRange className="h-3.5 w-3.5" />
+              <CalendarRange className="h-3.5 w-3.5 text-[#4C4BFF]" />
               Available from
             </span>
           </label>
@@ -79,7 +79,7 @@ export function MarketplaceSearchForm({
         <div>
           <label htmlFor="location" className={labelClass}>
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
+              <MapPin className="h-3.5 w-3.5 text-[#E647A7]" />
               Location
             </span>
           </label>
@@ -101,7 +101,7 @@ export function MarketplaceSearchForm({
         <div>
           <label htmlFor="type" className={labelClass}>
             <span className="inline-flex items-center gap-1.5">
-              <LayoutGrid className="h-3.5 w-3.5" />
+              <LayoutGrid className="h-3.5 w-3.5 text-[#8C47EE]" />
               Type of space
             </span>
           </label>
@@ -123,7 +123,7 @@ export function MarketplaceSearchForm({
         <div>
           <label htmlFor="size" className={labelClass}>
             <span className="inline-flex items-center gap-1.5">
-              <Maximize2 className="h-3.5 w-3.5" />
+              <Maximize2 className="h-3.5 w-3.5 text-[#FF8C3A]" />
               Size
             </span>
           </label>
@@ -156,7 +156,7 @@ export function MarketplaceSearchForm({
           <label className={labelClass}>Search</label>
           <button
             type="submit"
-            className="w-full rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-400"
+            className="w-full rounded-xl bg-gradient-to-r from-[#FF8C3A] to-[#F0507F] px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-500/30 transition hover:-translate-y-0.5 hover:from-[#ff9d57] hover:to-[#f56a92]"
             suppressHydrationWarning
           >
             Search

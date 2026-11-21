@@ -25,6 +25,27 @@ export const dynamic = "force-dynamic";
 
 type ListedSpace = Awaited<ReturnType<typeof listPublicAdSpaces>>[number];
 
+const SECTION_TONES = {
+  indigo: {
+    band: "bg-gradient-to-b from-[#E9EBFF] via-[#F3F1FF] to-transparent",
+    eyebrow: "bg-[#4C4BFF]/10 text-[#4C4BFF] ring-1 ring-[#4C4BFF]/20",
+    link: "bg-[#4C4BFF]/10 text-[#4C4BFF] hover:bg-[#4C4BFF] hover:text-white",
+    bar: "from-[#4C4BFF] to-[#8C47EE]",
+  },
+  orange: {
+    band: "bg-gradient-to-b from-[#FFF1E6] via-[#FFF7F0] to-transparent",
+    eyebrow: "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
+    link: "bg-orange-100 text-orange-700 hover:bg-orange-500 hover:text-white",
+    bar: "from-[#FF8C3A] to-[#E647A7]",
+  },
+  emerald: {
+    band: "bg-gradient-to-b from-[#E4F8EF] via-[#F0FBF6] to-transparent",
+    eyebrow: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
+    link: "bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white",
+    bar: "from-emerald-500 to-teal-500",
+  },
+} as const;
+
 function ListingSection({
   id,
   eyebrow,
@@ -36,6 +57,7 @@ function ListingSection({
   signedIn = false,
   cartIds,
   wishlistIds,
+  tone = "indigo",
 }: {
   id: string;
   eyebrow?: string;
@@ -47,50 +69,57 @@ function ListingSection({
   signedIn?: boolean;
   cartIds?: Set<string>;
   wishlistIds?: Set<string>;
+  tone?: keyof typeof SECTION_TONES;
 }) {
+  const style = SECTION_TONES[tone];
   return (
-    <section id={id} className="scroll-mt-24 mx-auto max-w-7xl px-6 py-16">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          {eyebrow ? (
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#4C4BFF]">
-              {eyebrow}
-            </p>
-          ) : null}
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl">
-            {title}
-          </h2>
-          <p className="mt-2 max-w-2xl text-slate-500">{description}</p>
-        </div>
-        <Link
-          href={viewMoreHref}
-          className="shrink-0 text-sm font-semibold text-[#4C4BFF] hover:underline"
-        >
-          {viewMoreLabel} →
-        </Link>
-      </div>
-      {items.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-500">
-          No listings yet.{" "}
-          <Link href={viewMoreHref} className="font-medium text-[#4C4BFF] hover:underline">
-            Browse the marketplace
+    <div className={style.band}>
+      <section id={id} className="scroll-mt-24 mx-auto max-w-7xl px-6 py-16">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            {eyebrow ? (
+              <p
+                className={`inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${style.eyebrow}`}
+              >
+                {eyebrow}
+              </p>
+            ) : null}
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl">
+              {title}
+            </h2>
+            <span className={`mt-3 block h-1 w-16 rounded-full bg-gradient-to-r ${style.bar}`} />
+            <p className="mt-3 max-w-2xl text-slate-500">{description}</p>
+          </div>
+          <Link
+            href={viewMoreHref}
+            className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold transition ${style.link}`}
+          >
+            {viewMoreLabel} →
           </Link>
-        </p>
-      ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map(({ space, customerPrice }) => (
-            <AdSpaceCard
-              key={space.id}
-              space={space}
-              customerPrice={customerPrice}
-              signedIn={signedIn}
-              inCart={cartIds?.has(space.id)}
-              inWishlist={wishlistIds?.has(space.id)}
-            />
-          ))}
         </div>
-      )}
-    </section>
+        {items.length === 0 ? (
+          <p className="mt-8 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-500">
+            No listings yet.{" "}
+            <Link href={viewMoreHref} className="font-medium text-[#4C4BFF] hover:underline">
+              Browse the marketplace
+            </Link>
+          </p>
+        ) : (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map(({ space, customerPrice }) => (
+              <AdSpaceCard
+                key={space.id}
+                space={space}
+                customerPrice={customerPrice}
+                signedIn={signedIn}
+                inCart={cartIds?.has(space.id)}
+                inWishlist={wishlistIds?.has(space.id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -118,22 +147,53 @@ export default async function HomePage() {
   ]);
 
   const categories = [
-    { label: "Billboards", href: "/#billboards", icon: Megaphone, color: "from-[#4C4BFF] to-[#8C47EE]" },
-    { label: "Digital Ads", href: "/#billboards", icon: Monitor, color: "from-[#8C47EE] to-[#E647A7]" },
-    { label: "Mall Ads", href: "/#mall-ads", icon: Building2, color: "from-emerald-500 to-teal-500" },
-    { label: "Vehicle Ads", href: "/#vehicle-ads", icon: Car, color: "from-[#FF8C3A] to-[#E647A7]" },
+    {
+      label: "Billboards",
+      href: "/#billboards",
+      icon: Megaphone,
+      color: "from-[#4C4BFF] to-[#8C47EE]",
+      tint: "from-[#4C4BFF]/10 via-white to-white hover:border-[#4C4BFF]/40 hover:shadow-[#4C4BFF]/20",
+      glow: "shadow-[#4C4BFF]/30",
+    },
+    {
+      label: "Digital Ads",
+      href: "/#billboards",
+      icon: Monitor,
+      color: "from-[#8C47EE] to-[#E647A7]",
+      tint: "from-[#8C47EE]/10 via-white to-white hover:border-[#8C47EE]/40 hover:shadow-[#8C47EE]/20",
+      glow: "shadow-[#8C47EE]/30",
+    },
+    {
+      label: "Mall Ads",
+      href: "/#mall-ads",
+      icon: Building2,
+      color: "from-emerald-500 to-teal-500",
+      tint: "from-emerald-500/10 via-white to-white hover:border-emerald-400/50 hover:shadow-emerald-500/20",
+      glow: "shadow-emerald-500/30",
+    },
+    {
+      label: "Vehicle Ads",
+      href: "/#vehicle-ads",
+      icon: Car,
+      color: "from-[#FF8C3A] to-[#E647A7]",
+      tint: "from-[#FF8C3A]/10 via-white to-white hover:border-[#FF8C3A]/50 hover:shadow-[#FF8C3A]/20",
+      glow: "shadow-[#FF8C3A]/30",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-[#F8F7FF] to-slate-50">
       <PublicNav />
 
-      <section className="relative overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(76,75,255,0.08),transparent_55%)]" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#E9EBFF] via-[#F6EFFF] to-[#FFF1E6]">
+        <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#4C4BFF]/25 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 top-8 h-96 w-96 rounded-full bg-[#E647A7]/20 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-[#FF8C3A]/25 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(76,75,255,0.10),transparent_55%)]" />
         <div className="relative mx-auto max-w-7xl px-6 py-16 lg:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-              <Sparkles className="h-4 w-4" />
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-sm font-semibold text-[#4C4BFF] shadow-sm ring-1 ring-[#4C4BFF]/20 backdrop-blur">
+              <Sparkles className="h-4 w-4 text-[#E647A7]" />
               India&apos;s advertising marketplace
             </p>
             <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-slate-900 lg:text-6xl">
@@ -148,8 +208,10 @@ export default async function HomePage() {
           </div>
 
           <div className="mx-auto mt-10 max-w-5xl">
-            <MarketplaceSearchForm />
-            <p className="mt-4 text-sm text-slate-500">
+            <div className="rounded-2xl bg-gradient-to-r from-[#4C4BFF] via-[#E647A7] to-[#FF8C3A] p-[1.5px] shadow-xl shadow-[#4C4BFF]/15">
+              <MarketplaceSearchForm />
+            </div>
+            <p className="mt-4 text-sm text-slate-600">
               Or describe your campaign in your own words:
             </p>
             <div className="mt-2">
@@ -160,14 +222,14 @@ export default async function HomePage() {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a
               href="#billboards"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE] px-6 py-3 font-semibold text-white shadow-lg shadow-[#4C4BFF]/20 hover:from-[#3d3ce8] hover:to-[#7a3cd9]"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE] px-6 py-3 font-semibold text-white shadow-lg shadow-[#4C4BFF]/30 transition hover:-translate-y-0.5 hover:from-[#3d3ce8] hover:to-[#7a3cd9]"
             >
               Browse Billboards
               <ArrowRight className="h-4 w-4" />
             </a>
             <Link
               href="/register/owner"
-              className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center rounded-xl border border-[#8C47EE]/30 bg-white/90 px-6 py-3 font-semibold text-[#5B3FD0] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8C47EE]/60 hover:bg-white"
             >
               List your AdSpace
             </Link>
@@ -177,15 +239,16 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-7xl px-6 py-12">
         <h2 className="text-2xl font-bold text-slate-900">Browse by category</h2>
+        <span className="mt-2 block h-1 w-16 rounded-full bg-gradient-to-r from-[#4C4BFF] via-[#E647A7] to-[#FF8C3A]" />
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((cat) => (
             <a
               key={cat.label}
               href={cat.href.replace("/#", "#")}
-              className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-[#4C4BFF]/30 hover:shadow-md"
+              className={`group flex items-center gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${cat.tint}`}
             >
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white`}
+                className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white shadow-lg transition group-hover:scale-110 ${cat.glow}`}
               >
                 <cat.icon className="h-6 w-6" />
               </div>
@@ -201,31 +264,38 @@ export default async function HomePage() {
       </section>
 
       {trending.length > 0 ? (
-        <section className="mx-auto max-w-7xl px-6 pb-8">
-          <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-              <TrendingUp className="h-6 w-6 text-[#E647A7]" />
-              <span>
-                Trending <span className="tabellone-gradient">&amp; Featured</span>
-              </span>
-            </h2>
-            <Link href="/marketplace" className="text-sm font-semibold text-[#4C4BFF] hover:underline">
-              View all →
-            </Link>
-          </div>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {trending.map(({ space, customerPrice }) => (
-              <AdSpaceCard
-                key={space.id}
-                space={space}
-                customerPrice={customerPrice}
-                signedIn={signedIn}
-                inCart={cartIds.has(space.id)}
-                inWishlist={wishlistIds.has(space.id)}
-              />
-            ))}
-          </div>
-        </section>
+        <div className="bg-gradient-to-r from-[#FFEEF7] via-[#F7F0FF] to-[#FFF1E6]">
+          <section className="mx-auto max-w-7xl px-6 py-12">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-3 text-2xl font-bold text-slate-900">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#E647A7] to-[#FF8C3A] shadow-lg shadow-[#E647A7]/30">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </span>
+                <span>
+                  Trending <span className="tabellone-gradient">&amp; Featured</span>
+                </span>
+              </h2>
+              <Link
+                href="/marketplace"
+                className="rounded-full bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#E647A7] shadow-sm ring-1 ring-[#E647A7]/20 transition hover:bg-[#E647A7] hover:text-white"
+              >
+                View all →
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {trending.map(({ space, customerPrice }) => (
+                <AdSpaceCard
+                  key={space.id}
+                  space={space}
+                  customerPrice={customerPrice}
+                  signedIn={signedIn}
+                  inCart={cartIds.has(space.id)}
+                  inWishlist={wishlistIds.has(space.id)}
+                />
+              ))}
+            </div>
+          </section>
+        </div>
       ) : null}
 
       <ListingSection
@@ -241,23 +311,23 @@ export default async function HomePage() {
         wishlistIds={wishlistIds}
       />
 
-      <div className="bg-white">
-        <ListingSection
-          id="vehicle-ads"
-          eyebrow="Vehicle Advertising"
-          title="Mobile advertising solutions"
-          description="Reach audiences on the move with buses, autos, and other vehicle ads."
-          viewMoreHref="/marketplace?type=vehicle"
-          viewMoreLabel="View more vehicle ads"
-          items={vehicleItems}
-          signedIn={signedIn}
-          cartIds={cartIds}
-          wishlistIds={wishlistIds}
-        />
-      </div>
+      <ListingSection
+        id="vehicle-ads"
+        tone="orange"
+        eyebrow="Vehicle Advertising"
+        title="Mobile advertising solutions"
+        description="Reach audiences on the move with buses, autos, and other vehicle ads."
+        viewMoreHref="/marketplace?type=vehicle"
+        viewMoreLabel="View more vehicle ads"
+        items={vehicleItems}
+        signedIn={signedIn}
+        cartIds={cartIds}
+        wishlistIds={wishlistIds}
+      />
 
       <ListingSection
         id="mall-ads"
+        tone="emerald"
         eyebrow="Mall Advertising"
         title="Premium mall spaces"
         description="High-footfall screens and displays in shopping destinations."
@@ -269,7 +339,10 @@ export default async function HomePage() {
         wishlistIds={wishlistIds}
       />
 
-      <section id="about" className="scroll-mt-24 border-t border-slate-200 bg-white">
+      <section
+        id="about"
+        className="scroll-mt-24 border-t border-slate-200 bg-gradient-to-b from-white via-[#F6F4FF] to-[#FFF4EC]"
+      >
         <div className="mx-auto max-w-7xl px-6 py-16">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl">
             About <span className="tabellone-gradient">tabellone</span>
@@ -285,20 +358,33 @@ export default async function HomePage() {
                 icon: Search,
                 title: "Smart discovery",
                 desc: "Filter by city, type, price, and footfall — or use AI natural language search.",
+                tile: "from-[#4C4BFF] to-[#8C47EE] shadow-[#4C4BFF]/30",
+                card: "hover:border-[#4C4BFF]/30 hover:shadow-[#4C4BFF]/15",
               },
               {
                 icon: Shield,
                 title: "Admin-verified listings",
                 desc: "Every public listing is reviewed before it appears on the marketplace.",
+                tile: "from-emerald-500 to-teal-500 shadow-emerald-500/30",
+                card: "hover:border-emerald-300/60 hover:shadow-emerald-500/15",
               },
               {
                 icon: Megaphone,
                 title: "End-to-end workflow",
                 desc: "Campaign → booking request → approval → payment → confirmed booking.",
+                tile: "from-[#FF8C3A] to-[#E647A7] shadow-[#FF8C3A]/30",
+                card: "hover:border-[#FF8C3A]/40 hover:shadow-[#FF8C3A]/15",
               },
             ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-slate-100 p-6">
-                <f.icon className="h-8 w-8 text-[#4C4BFF]" />
+              <div
+                key={f.title}
+                className={`rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${f.card}`}
+              >
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg ${f.tile}`}
+                >
+                  <f.icon className="h-6 w-6" />
+                </div>
                 <h3 className="mt-4 font-semibold text-slate-900">{f.title}</h3>
                 <p className="mt-2 text-sm text-slate-500">{f.desc}</p>
               </div>
@@ -307,14 +393,14 @@ export default async function HomePage() {
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/register/advertiser"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE] px-6 py-3 font-semibold text-white hover:from-[#3d3ce8]"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE] px-6 py-3 font-semibold text-white shadow-lg shadow-[#4C4BFF]/30 transition hover:-translate-y-0.5 hover:from-[#3d3ce8]"
             >
               Start advertising
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/register/owner"
-              className="inline-flex items-center rounded-xl border border-slate-200 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center rounded-xl border border-[#8C47EE]/30 bg-white px-6 py-3 font-semibold text-[#5B3FD0] shadow-sm transition hover:-translate-y-0.5 hover:border-[#8C47EE]/60"
             >
               List your space
             </Link>
@@ -322,7 +408,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 bg-[#0f172a] text-slate-400">
+      <footer className="border-t border-slate-200 bg-gradient-to-br from-[#0f172a] via-[#1b1650] to-[#2b1245] text-slate-400">
+        <div className="h-1 bg-gradient-to-r from-[#4C4BFF] via-[#E647A7] to-[#FF8C3A]" />
         <div className="mx-auto max-w-7xl px-6 py-12">
           <div className="grid gap-8 sm:grid-cols-3 text-sm">
             <div>

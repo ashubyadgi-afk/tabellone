@@ -48,15 +48,15 @@ function FilterGroup({ title, param, options }: FilterGroupProps) {
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm transition",
                 checked
-                  ? "bg-orange-50 text-[#1e3a5f]"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-gradient-to-r from-[#4C4BFF]/10 to-[#8C47EE]/10 font-medium text-[#3b3acc]"
+                  : "text-slate-600 hover:bg-[#4C4BFF]/5"
               )}
             >
               <span
                 className={cn(
                   "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
                   checked
-                    ? "border-orange-500 bg-orange-500"
+                    ? "border-[#4C4BFF] bg-[#4C4BFF]"
                     : "border-slate-300 bg-white"
                 )}
               >
@@ -94,10 +94,11 @@ export function PopularFilters() {
   }
 
   return (
-    <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-36">
+    <aside className="h-fit overflow-hidden rounded-2xl border border-[#4C4BFF]/15 bg-white p-4 shadow-md shadow-[#4C4BFF]/5 lg:sticky lg:top-36">
+      <div className="-mx-4 -mt-4 mb-4 h-1 bg-gradient-to-r from-[#4C4BFF] via-[#E647A7] to-[#FF8C3A]" />
       <div className="mb-4 flex items-start justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-[#1e3a5f]">Popular filters</h2>
+          <h2 className="text-sm font-semibold text-[#3b3acc]">Popular filters</h2>
           <p className="mt-0.5 text-xs text-slate-500">
             Select to refine. Click again to clear.
           </p>
