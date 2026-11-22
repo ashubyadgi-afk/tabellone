@@ -4,44 +4,31 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-/** Neon / serverless: keep each lambda to one connection. */
+/**
+ * Append serverless-friendly query params without parsing the URL.
+ * `new URL()` can corrupt Neon passwords that contain special characters.
+ */
 function databaseUrl() {
   const raw = process.env.DATABASE_URL;
   if (!raw) return undefined;
-  try {
-    const url = new URL(raw);
-    if (!url.searchParams.has("connection_limit")) {
-      url.searchParams.set("connection_limit", "1");
-    }
-    if (!url.searchParams.has("connect_timeout")) {
-      url.searchParams.set("connect_timeout", "10");
-    }
-    if (
-      url.hostname.includes("-pooler") &&
-      !url.searchParams.has("pgbouncer")
-    ) {
-      url.searchParams.set("pgbouncer", "true");
-    }
-    return url.toString();
-  } catch {
-    return raw;
-  }
+
+  const extras: string[] = [];
+  if (!/[?&]connection_limit=/.test(raw)) extras.push("connection_limit=1");
+  if (!/[?&]connect_timeout=/.test(raw)) extras.push("connect_timeout=10");
+
+  if (!extras.length) return raw;
+  return `${raw}${raw.includes("?") ? "&" : "?"}${extras.join("&")}`;
 }
 
 function createPrismaClient() {
+  const url = databaseUrl();
   return new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    datasources: {
-      db: { url: databaseUrl() },
-    },
+    ...(url ? { datasources: { db: { url } } } : {}),
   });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
 
 // Reuse the client across warm serverless invocations.
 globalForPrisma.prisma = prisma;
