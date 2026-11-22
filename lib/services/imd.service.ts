@@ -42,9 +42,15 @@ export async function getImdDashboardStats(organizationId: string) {
     await Promise.all([
       prisma.adSpace.findMany({
         where: { organizationId, imdStatus: { not: "archived" } },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          adSpaceType: true,
+          imdStatus: true,
           bookings: {
             where: { status: { in: ["confirmed", "active"] } },
+            select: { startDate: true, endDate: true },
           },
           _count: { select: { bookings: true } },
         },
@@ -289,7 +295,10 @@ export async function listOwnerAdSpaces(
     where: { organizationId, imdStatus: { not: "archived" } },
     orderBy: { createdAt: "desc" },
     include: {
-      bookings: { where: { status: { in: ["confirmed", "active"] } } },
+      bookings: {
+        where: { status: { in: ["confirmed", "active"] } },
+        select: { id: true, startDate: true, endDate: true },
+      },
     },
   });
 

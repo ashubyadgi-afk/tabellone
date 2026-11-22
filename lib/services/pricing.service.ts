@@ -1,9 +1,10 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { calculatePricing, type PricingBreakdown } from "@/lib/pricing/calculate";
 
 export type { PricingBreakdown };
 
-export async function getPricingConfig() {
+async function loadPricingConfig() {
   const config = await prisma.pricingConfig.findUnique({
     where: { id: "default" },
   });
@@ -12,6 +13,12 @@ export async function getPricingConfig() {
   return prisma.pricingConfig.create({
     data: { id: "default" },
   });
+}
+
+export async function getPricingConfig() {
+  return unstable_cache(loadPricingConfig, ["pricing-config-default"], {
+    revalidate: 300,
+  })();
 }
 
 export async function calculatePricingFromDb(basePrice: number) {

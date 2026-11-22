@@ -177,7 +177,7 @@ export async function listPublicAdSpaces(filters: MarketplaceFilters = {}) {
       where: buildMarketplaceWhere(filters),
       include: listingInclude,
       orderBy: { createdAt: "desc" },
-      take: filters.take,
+      take: filters.take ?? 60,
     });
   } catch (err) {
     if (isDatabaseUnreachable(err)) {
@@ -230,23 +230,26 @@ export async function checkAvailability(
   startDate: Date,
   endDate: Date
 ) {
-  const conflicts = await prisma.bookingRequest.findMany({
-    where: {
-      adSpaceId,
-      status: { in: ["approved", "payment_pending", "paid", "confirmed"] },
-      startDate: { lte: endDate },
-      endDate: { gte: startDate },
-    },
-  });
-
-  const imdConflicts = await prisma.booking.findMany({
-    where: {
-      adSpaceId,
-      status: { in: ["confirmed", "active"] },
-      startDate: { lte: endDate },
-      endDate: { gte: startDate },
-    },
-  });
+  const [conflicts, imdConflicts] = await Promise.all([
+    prisma.bookingRequest.findMany({
+      where: {
+        adSpaceId,
+        status: { in: ["approved", "payment_pending", "paid", "confirmed"] },
+        startDate: { lte: endDate },
+        endDate: { gte: startDate },
+      },
+      select: { id: true },
+    }),
+    prisma.booking.findMany({
+      where: {
+        adSpaceId,
+        status: { in: ["confirmed", "active"] },
+        startDate: { lte: endDate },
+        endDate: { gte: startDate },
+      },
+      select: { id: true },
+    }),
+  ]);
 
   return conflicts.length === 0 && imdConflicts.length === 0;
 }

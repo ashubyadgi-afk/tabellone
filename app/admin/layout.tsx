@@ -1,11 +1,12 @@
 import { getLiveSession, redirectToRoleArea } from "@/lib/auth/live-session";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
+
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = redirectToRoleArea(await getLiveSession(), "admin");
+  const { session } = redirectToRoleArea(await getLiveSession(), "admin");
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">

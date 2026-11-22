@@ -10,7 +10,11 @@ import {
 export type LiveSession =
   | { status: "anonymous" }
   | { status: "stale" }
-  | { status: "ok"; session: SessionPayload };
+  | {
+      status: "ok";
+      session: SessionPayload;
+      organizationName: string | null;
+    };
 
 function isInvalidId(error: unknown) {
   return (
@@ -34,6 +38,7 @@ export async function getLiveSession(): Promise<LiveSession> {
         role: true,
         status: true,
         organizationId: true,
+        organization: { select: { id: true, name: true } },
       },
     });
   } catch (error) {
@@ -44,18 +49,7 @@ export async function getLiveSession(): Promise<LiveSession> {
   if (!user || user.status !== "active") return { status: "stale" };
 
   if (user.role !== "admin") {
-    if (!user.organizationId) return { status: "stale" };
-    let org;
-    try {
-      org = await prisma.organization.findUnique({
-        where: { id: user.organizationId },
-        select: { id: true },
-      });
-    } catch (error) {
-      if (isInvalidId(error)) return { status: "stale" };
-      throw error;
-    }
-    if (!org) return { status: "stale" };
+    if (!user.organizationId || !user.organization) return { status: "stale" };
   }
 
   return {
@@ -66,12 +60,17 @@ export async function getLiveSession(): Promise<LiveSession> {
       role: user.role,
       email: user.email,
     },
+    organizationName: user.organization?.name ?? null,
   };
 }
 
 export function redirectIfSessionUnusable(
   live: LiveSession
-): asserts live is { status: "ok"; session: SessionPayload } {
+): asserts live is {
+  status: "ok";
+  session: SessionPayload;
+  organizationName: string | null;
+} {
   if (live.status === "stale") redirect("/api/v1/auth/session-reset");
   if (live.status === "anonymous") redirect("/login");
 }
@@ -79,10 +78,13 @@ export function redirectIfSessionUnusable(
 export function redirectToRoleArea(
   live: LiveSession,
   role: SessionPayload["role"]
-): SessionPayload {
+): { session: SessionPayload; organizationName: string | null } {
   redirectIfSessionUnusable(live);
   if (live.session.role !== role) {
     redirect(getRoleHomePath(live.session.role));
   }
-  return live.session;
+  return {
+    session: live.session,
+    organizationName: live.organizationName,
+  };
 }

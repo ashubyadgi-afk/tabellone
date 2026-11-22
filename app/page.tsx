@@ -14,16 +14,19 @@ import { getSession } from "@/lib/auth/session";
 import { listCartAdSpaceIds } from "@/lib/services/cart.service";
 import { listWishlistAdSpaceIds } from "@/lib/services/wishlist.service";
 import { PublicNav } from "@/components/layout/PublicNav";
+import dynamic from "next/dynamic";
 import { AiSearchBar } from "@/components/marketplace/AiSearchBar";
-import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
 import { MarketplaceSearchForm } from "@/components/marketplace/MarketplaceSearchForm";
-import { listPublicAdSpaces } from "@/lib/services/marketplace.service";
-import { pricePublicListings } from "@/lib/services/pricing.service";
+import { getHomePricedListings } from "@/lib/marketplace/home-listings";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
 
-export const dynamic = "force-dynamic";
+const AiChatWidget = dynamic(
+  () =>
+    import("@/components/marketplace/AiChatWidget").then((mod) => mod.AiChatWidget),
+  { ssr: false }
+);
 
-type ListedSpace = Awaited<ReturnType<typeof listPublicAdSpaces>>[number];
+type ListedSpace = Awaited<ReturnType<typeof getHomePricedListings>>[number]["space"];
 
 const SECTION_TONES = {
   indigo: {
@@ -129,22 +132,28 @@ export default async function HomePage() {
     session?.role === "advertiser" && session.organizationId
       ? session.organizationId
       : null;
-  const [cartIds, wishlistIds] = advertiserId
-    ? await Promise.all([
-        listCartAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
-        listWishlistAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
-      ])
-    : [new Set<string>(), new Set<string>()];
+
+  const [pricedListings, cartIds, wishlistIds] = await Promise.all([
+    getHomePricedListings(),
+    advertiserId
+      ? listCartAdSpaceIds(advertiserId).then((ids) => new Set(ids))
+      : Promise.resolve(new Set<string>()),
+    advertiserId
+      ? listWishlistAdSpaceIds(advertiserId).then((ids) => new Set(ids))
+      : Promise.resolve(new Set<string>()),
+  ]);
   const signedIn = Boolean(advertiserId);
 
-  const [trending, billboardItems, vehicleItems, mallItems] = await Promise.all([
-    listPublicAdSpaces({ take: 3 }).then(pricePublicListings),
-    listPublicAdSpaces({ types: ["billboard", "digital"], take: 6 }).then(
-      pricePublicListings
-    ),
-    listPublicAdSpaces({ type: "vehicle", take: 6 }).then(pricePublicListings),
-    listPublicAdSpaces({ type: "mall", take: 6 }).then(pricePublicListings),
-  ]);
+  const trending = pricedListings.slice(0, 3);
+  const billboardItems = pricedListings
+    .filter((row) => row.space.adSpaceType === "billboard" || row.space.adSpaceType === "digital")
+    .slice(0, 6);
+  const vehicleItems = pricedListings
+    .filter((row) => row.space.adSpaceType === "vehicle")
+    .slice(0, 6);
+  const mallItems = pricedListings
+    .filter((row) => row.space.adSpaceType === "mall")
+    .slice(0, 6);
 
   const categories = [
     {

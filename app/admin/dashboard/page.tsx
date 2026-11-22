@@ -2,12 +2,12 @@ import { StatCard, Badge } from "@/components/ui";
 import { Panel, TABLE_HEAD, TABLE_ROW } from "@/components/dashboard/DashboardUI";
 import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
-  CitiesBarChart,
-  CommissionMixChart,
-  FirmGrowthChart,
-  RevenueBars,
-  TypesDonut,
-} from "@/components/admin/AdminDashboardCharts";
+  LazyCitiesBarChart as CitiesBarChart,
+  LazyCommissionMixChart as CommissionMixChart,
+  LazyFirmGrowthChart as FirmGrowthChart,
+  LazyRevenueBars as RevenueBars,
+  LazyTypesDonut as TypesDonut,
+} from "@/components/charts/lazy";
 import {
   Users,
   Building2,

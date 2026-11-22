@@ -5,19 +5,21 @@ import { Badge } from "@/components/ui";
 import { EmptyState, Panel, TotalCard } from "@/components/dashboard/DashboardUI";
 import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
-  BookingTimeline,
-  CampaignBudgetChart,
-  CityReachChart,
-  CostEfficiencyChart,
-  SpendByTypeChart,
-  SpendTrendChart,
-  StatusDonut,
-  type CampaignPoint,
-  type CityPoint,
-  type EfficiencyPoint,
-  type ScheduleRow,
-  type Slice,
-  type SpendPoint,
+  LazyBookingTimeline as BookingTimeline,
+  LazyCampaignBudgetChart as CampaignBudgetChart,
+  LazyCityReachChart as CityReachChart,
+  LazyCostEfficiencyChart as CostEfficiencyChart,
+  LazySpendByTypeChart as SpendByTypeChart,
+  LazySpendTrendChart as SpendTrendChart,
+  LazyStatusDonut as StatusDonut,
+} from "@/components/charts/lazy";
+import type {
+  CampaignPoint,
+  CityPoint,
+  EfficiencyPoint,
+  ScheduleRow,
+  Slice,
+  SpendPoint,
 } from "@/components/advertiser/DashboardCharts";
 import {
   ArrowUpRight,

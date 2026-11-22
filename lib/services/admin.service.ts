@@ -207,7 +207,7 @@ export async function listOwnerOrganizations(options?: {
   const orgs = await prisma.organization.findMany({
     where: { type: "owner", ...orgSearchWhere(options?.q) },
     orderBy: { createdAt: "desc" },
-    take: options?.take,
+    take: options?.take ?? 100,
     include: {
       ownerProfile: true,
       users: { select: { email: true, role: true, status: true } },
@@ -241,7 +241,7 @@ export async function listAdvertiserOrganizations(options?: {
   const orgs = await prisma.organization.findMany({
     where: { type: "advertiser", ...orgSearchWhere(options?.q) },
     orderBy: { createdAt: "desc" },
-    take: options?.take,
+    take: options?.take ?? 100,
     include: {
       advertiserProfile: true,
       users: { select: { email: true, role: true, status: true } },

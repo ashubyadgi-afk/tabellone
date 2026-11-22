@@ -1,7 +1,7 @@
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { getSession } from "@/lib/auth/session";
 import { PublicNav } from "@/components/layout/PublicNav";
-import { AiChatWidget } from "@/components/marketplace/AiChatWidget";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
 import { MarketplaceSearchForm } from "@/components/marketplace/MarketplaceSearchForm";
 import { PopularFilters } from "@/components/marketplace/PopularFilters";
@@ -13,7 +13,11 @@ import { pricePublicListings } from "@/lib/services/pricing.service";
 import { listCartAdSpaceIds } from "@/lib/services/cart.service";
 import { listWishlistAdSpaceIds } from "@/lib/services/wishlist.service";
 
-export const dynamic = "force-dynamic";
+const AiChatWidget = dynamic(
+  () =>
+    import("@/components/marketplace/AiChatWidget").then((mod) => mod.AiChatWidget),
+  { ssr: false }
+);
 
 type PageProps = {
   searchParams: Promise<{
@@ -33,20 +37,23 @@ type PageProps = {
 
 export default async function MarketplacePage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const session = await getSession();
   const filters = marketplaceFiltersFromParams(params);
-  const spaces = await listPublicAdSpaces(filters);
-  const priced = await pricePublicListings(spaces);
+  const session = await getSession();
   const advertiserId =
     session?.role === "advertiser" && session.organizationId
       ? session.organizationId
       : null;
-  const [cartIds, wishlistIds] = advertiserId
-    ? await Promise.all([
-        listCartAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
-        listWishlistAdSpaceIds(advertiserId).then((ids) => new Set(ids)),
-      ])
-    : [new Set<string>(), new Set<string>()];
+
+  const [spaces, cartIds, wishlistIds] = await Promise.all([
+    listPublicAdSpaces(filters),
+    advertiserId
+      ? listCartAdSpaceIds(advertiserId).then((ids) => new Set(ids))
+      : Promise.resolve(new Set<string>()),
+    advertiserId
+      ? listWishlistAdSpaceIds(advertiserId).then((ids) => new Set(ids))
+      : Promise.resolve(new Set<string>()),
+  ]);
+  const priced = await pricePublicListings(spaces);
 
   const searched = Boolean(
     params.view === "results" ||

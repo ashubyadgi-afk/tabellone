@@ -6,13 +6,13 @@ import { StatCard, Badge } from "@/components/ui";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
-  BookingTrendChart,
-  InventoryMixChart,
-  InvoiceTrendChart,
-  OccupancyChart,
-  SpacesByTypeChart,
-  TopSpacesChart,
-} from "@/components/owner/OwnerDashboardCharts";
+  LazyBookingTrendChart as BookingTrendChart,
+  LazyInventoryMixChart as InventoryMixChart,
+  LazyInvoiceTrendChart as InvoiceTrendChart,
+  LazyOccupancyChart as OccupancyChart,
+  LazySpacesByTypeChart as SpacesByTypeChart,
+  LazyTopSpacesChart as TopSpacesChart,
+} from "@/components/charts/lazy";
 import {
   Layers,
   CheckCircle2,
