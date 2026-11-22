@@ -6,9 +6,30 @@ import { BOOKING_STATUS_LABELS, IMD_STATUS_LABELS } from "@/lib/services/imd.ser
 import { adSpaceTypeLabel } from "@/lib/marketplace/search";
 import { HoverInfo } from "@/components/owner/HoverInfo";
 import { Button, Badge } from "@/components/ui";
-import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
-import { Plus } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { PageBanner, TotalCard, SURFACE } from "@/components/dashboard/DashboardUI";
+import {
+  Plus,
+  CalendarCheck,
+  CalendarClock,
+  FileText,
+  IndianRupee,
+} from "lucide-react";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
+
+function bookingAccent(status: string) {
+  if (status === "active") return "from-emerald-400 to-emerald-500";
+  if (status === "confirmed") return "from-[#4C4BFF] to-[#8C47EE]";
+  if (status === "completed") return "from-slate-300 to-slate-400";
+  if (status === "cancelled") return "from-rose-400 to-rose-500";
+  return "from-amber-400 to-amber-500";
+}
+
+function bookingBadgeVariant(status: string): "success" | "warning" | "muted" | "default" {
+  if (status === "active" || status === "confirmed") return "success";
+  if (status === "cancelled") return "warning";
+  if (status === "completed") return "muted";
+  return "default";
+}
 
 export default async function BookingsPage() {
   const session = await getSession();
@@ -24,8 +45,16 @@ export default async function BookingsPage() {
     },
   });
 
+  const now = new Date();
+  const activeCount = items.filter((b) => b.status === "active").length;
+  const upcomingCount = items.filter(
+    (b) => (b.status === "confirmed" || b.status === "active") && b.startDate > now
+  ).length;
+  const withInvoice = items.filter((b) => Boolean(b.invoice)).length;
+  const totalAmount = items.reduce((sum, b) => sum + (b.amount ?? 0), 0);
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageBanner
         title="Bookings"
         description="Client bookings linked to Ad Spaces"
@@ -44,41 +73,55 @@ export default async function BookingsPage() {
           </div>
         }
       />
-      <SurfaceCard className="overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className={TABLE_HEAD}>
-            <tr>
-              <th className="px-6 py-4">Ad Space</th>
-              <th className="px-6 py-4">Client</th>
-              <th className="px-6 py-4">Period</th>
-              <th className="px-6 py-4">Amount</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Invoice</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {items.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-slate-500">No bookings yet</td>
-              </tr>
-            ) : (
-              items.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50/50">
-                  <td className="px-6 py-4 font-medium">
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <TotalCard label="Total bookings" value={items.length} icon={CalendarCheck} accent="indigo" />
+        <TotalCard label="Active" value={activeCount} icon={CalendarClock} accent="emerald" />
+        <TotalCard label="Upcoming" value={upcomingCount} icon={CalendarClock} accent="violet" />
+        <TotalCard
+          label="Booked value"
+          value={formatCurrency(totalAmount)}
+          sub={`${withInvoice} with invoice`}
+          icon={IndianRupee}
+          accent="orange"
+        />
+      </div>
+
+      {items.length === 0 ? (
+        <div className={cn(SURFACE, "px-6 py-12 text-center text-sm text-slate-500")}>
+          No bookings yet.{" "}
+          <Link href="/owner/imd/bookings/new" className="font-semibold text-[#4C4BFF] hover:underline">
+            Create your first
+          </Link>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((b) => (
+            <article key={b.id} className={cn(SURFACE, "relative overflow-hidden p-5")}>
+              <span className={cn("absolute inset-x-0 top-0 h-1 bg-gradient-to-r", bookingAccent(b.status))} />
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="truncate text-[15px] font-semibold tracking-tight text-slate-900">
                     <HoverInfo
                       label={b.adSpace.name}
                       title={b.adSpace.name}
                       rows={[
                         { label: "Type", value: adSpaceTypeLabel(b.adSpace.adSpaceType) || "—" },
-                        { label: "City", value: [b.adSpace.city, b.adSpace.state].filter(Boolean).join(", ") || "—" },
+                        {
+                          label: "City",
+                          value: [b.adSpace.city, b.adSpace.state].filter(Boolean).join(", ") || "—",
+                        },
                         { label: "Address", value: b.adSpace.address || "—" },
                         { label: "Size", value: b.adSpace.dimensions || "—" },
                         { label: "Status", value: IMD_STATUS_LABELS[b.adSpace.imdStatus] },
-                        { label: "Base price", value: b.adSpace.basePrice ? formatCurrency(b.adSpace.basePrice) : "—" },
+                        {
+                          label: "Base price",
+                          value: b.adSpace.basePrice ? formatCurrency(b.adSpace.basePrice) : "—",
+                        },
                       ]}
                     />
-                  </td>
-                  <td className="px-6 py-4">
+                  </h2>
+                  <p className="mt-0.5 truncate text-xs text-slate-500">
                     <HoverInfo
                       label={b.client.name}
                       title={b.client.name}
@@ -91,29 +134,51 @@ export default async function BookingsPage() {
                         { label: "Bookings", value: String(b.client._count.bookings) },
                       ]}
                     />
-                  </td>
-                  <td className="px-6 py-4 text-slate-600">
-                    {formatDate(b.startDate)} – {formatDate(b.endDate)}
-                  </td>
-                  <td className="px-6 py-4">{b.amount ? formatCurrency(b.amount) : "—"}</td>
-                  <td className="px-6 py-4">
-                    <Badge variant="success">{BOOKING_STATUS_LABELS[b.status]}</Badge>
-                  </td>
-                  <td className="px-6 py-4">
-                    {b.invoice ? (
-                      <Link href={`/owner/imd/invoices/${b.invoice.id}`} className="text-[#4C4BFF] hover:underline">
-                        {b.invoice.invoiceNumber}
-                      </Link>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </SurfaceCard>
+                    {b.client.businessName ? ` · ${b.client.businessName}` : ""}
+                  </p>
+                </div>
+                <Badge variant={bookingBadgeVariant(b.status)}>{BOOKING_STATUS_LABELS[b.status]}</Badge>
+              </div>
+
+              <dl className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-slate-50 px-2.5 py-2 ring-1 ring-slate-100">
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    Period
+                  </dt>
+                  <dd className="mt-1 text-sm font-semibold text-slate-900">
+                    {formatDate(b.startDate)}
+                    <span className="mx-1 text-slate-300">→</span>
+                    {formatDate(b.endDate)}
+                  </dd>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-2.5 py-2 ring-1 ring-slate-100">
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    Amount
+                  </dt>
+                  <dd className="mt-1 text-sm font-semibold tabular-nums text-slate-900">
+                    {b.amount ? formatCurrency(b.amount) : "—"}
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+                <span className="text-slate-400">{adSpaceTypeLabel(b.adSpace.adSpaceType)}</span>
+                {b.invoice ? (
+                  <Link
+                    href={`/owner/imd/invoices/${b.invoice.id}`}
+                    className="inline-flex items-center gap-1.5 font-semibold text-[#4C4BFF] hover:underline"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    {b.invoice.invoiceNumber}
+                  </Link>
+                ) : (
+                  <span className="text-slate-400">No invoice</span>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

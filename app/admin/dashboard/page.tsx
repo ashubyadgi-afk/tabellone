@@ -2,6 +2,13 @@ import { StatCard, Badge } from "@/components/ui";
 import { Panel, TABLE_HEAD, TABLE_ROW } from "@/components/dashboard/DashboardUI";
 import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
+  CitiesBarChart,
+  CommissionMixChart,
+  FirmGrowthChart,
+  RevenueBars,
+  TypesDonut,
+} from "@/components/admin/AdminDashboardCharts";
+import {
   Users,
   Building2,
   ClipboardCheck,
@@ -12,6 +19,7 @@ import {
   ShieldAlert,
   TrendingUp,
   Receipt,
+  PieChart,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import Link from "next/link";
@@ -27,39 +35,6 @@ function verificationBadge(status?: string | null) {
   if (status === "approved") return <Badge variant="success">approved</Badge>;
   if (status === "rejected") return <Badge variant="warning">rejected</Badge>;
   return <Badge variant="warning">{status.replaceAll("_", " ")}</Badge>;
-}
-
-function BarList({
-  items,
-  formatValue,
-}: {
-  items: { label: string; value: number }[];
-  formatValue?: (value: number) => string;
-}) {
-  const max = Math.max(...items.map((item) => item.value), 1);
-  if (items.length === 0) {
-    return <p className="px-5 py-8 text-sm text-slate-500">No data yet.</p>;
-  }
-  return (
-    <ul className="space-y-3 px-5 py-4">
-      {items.map((item) => (
-        <li key={item.label}>
-          <div className="mb-1 flex items-center justify-between text-sm">
-            <span className="capitalize text-slate-700">{item.label}</span>
-            <span className="font-semibold text-slate-900 tabular-nums">
-              {formatValue ? formatValue(item.value) : item.value}
-            </span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-2 rounded-full bg-gradient-to-r from-[#4C4BFF] to-[#8C47EE]"
-              style={{ width: `${Math.max((item.value / max) * 100, 4)}%` }}
-            />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 function ViewAll({ href }: { href: string }) {
@@ -78,10 +53,12 @@ export default async function AdminDashboardPage() {
     listAdvertiserOrganizations({ take: 8 }),
   ]);
 
-  const growthMax = Math.max(
-    ...insights.growth.flatMap((row) => [row.owners, row.advertisers]),
-    1
-  );
+  const commissionSlices = [
+    { name: "Platform commission", value: insights.commission.commissionAmount, color: "#8C47EE" },
+    { name: "GST on commission", value: insights.commission.gstOnCommission, color: "#f59e0b" },
+    { name: "TDS", value: insights.commission.tdsAmount, color: "#64748b" },
+    { name: "Owner payout", value: insights.commission.ownerPayout, color: "#10b981" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -210,82 +187,47 @@ export default async function AdminDashboardPage() {
           title="Firm growth (6 months)"
           description="New owner vs advertiser organizations by month joined"
           icon={TrendingUp}
-          bodyClassName="p-0"
         >
-          <div className="flex h-44 items-end gap-2 px-5 pb-2 pt-4">
-            {insights.growth.map((row) => (
-              <div key={row.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                <div className="flex h-28 w-full items-end justify-center gap-1">
-                  <div
-                    className="w-3 rounded-t bg-gradient-to-t from-[#4C4BFF] to-[#7A79FF]"
-                    style={{
-                      height: `${Math.max((row.owners / growthMax) * 100, row.owners ? 6 : 0)}%`,
-                    }}
-                    title={`Owners ${row.owners}`}
-                  />
-                  <div
-                    className="w-3 rounded-t bg-gradient-to-t from-[#F06B3B] to-[#FF9A5C]"
-                    style={{
-                      height: `${Math.max((row.advertisers / growthMax) * 100, row.advertisers ? 6 : 0)}%`,
-                    }}
-                    title={`Advertisers ${row.advertisers}`}
-                  />
-                </div>
-                <p className="text-center text-[10px] leading-tight text-slate-500">{row.label}</p>
-                <p className="text-[10px] text-slate-400">
-                  {row.owners}+{row.advertisers}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="px-5 pb-4 text-xs text-slate-500">
-            <span className="mr-3 inline-block h-2 w-2 rounded-sm bg-[#4C4BFF]" /> Owners
-            <span className="ml-4 mr-3 inline-block h-2 w-2 rounded-sm bg-[#F06B3B]" /> Advertisers
-          </p>
+          <FirmGrowthChart data={insights.growth} />
         </Panel>
-        <Panel title="Popular cities" description="Ad spaces by city" icon={MapPin} bodyClassName="p-0">
-          <BarList items={insights.popularCities} />
+        <Panel
+          title="Revenue snapshot"
+          description="Booked commission, GST, owner payout, and collected payments"
+          icon={IndianRupee}
+        >
+          <RevenueBars
+            commission={insights.commission.commissionAmount}
+            gst={insights.commission.gstOnCommission}
+            ownerPayout={insights.commission.ownerPayout}
+            collected={insights.commission.collectedPayments}
+          />
         </Panel>
-        <Panel title="Popular types" description="Ad spaces by format" icon={Layers} bodyClassName="p-0">
-          <BarList items={insights.popularTypes} />
+        <Panel title="Popular cities" description="Ad spaces by city" icon={MapPin}>
+          <CitiesBarChart data={insights.popularCities} />
+        </Panel>
+        <Panel title="Popular types" description="Ad spaces by format" icon={PieChart}>
+          <TypesDonut data={insights.popularTypes} />
         </Panel>
         <Panel
           title="Commission mix"
           description="From approved / paid / confirmed booking requests"
           icon={Receipt}
+          className="xl:col-span-2"
         >
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between gap-4 border-b border-slate-100 py-2">
-              <dt className="text-slate-500">Customer price (gross)</dt>
-              <dd className="font-semibold tabular-nums">
+          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <CommissionMixChart data={commissionSlices} />
+            <div className="rounded-2xl bg-slate-50 px-5 py-4 ring-1 ring-slate-200/70 lg:min-w-[220px]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                Customer price (gross)
+              </p>
+              <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
                 {formatCurrency(insights.commission.customerPrice)}
-              </dd>
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Across {insights.commission.bookingCount} priced booking requests
+              </p>
             </div>
-            <div className="flex justify-between gap-4 border-b border-slate-100 py-2">
-              <dt className="text-slate-500">Platform commission</dt>
-              <dd className="font-semibold tabular-nums">
-                {formatCurrency(insights.commission.commissionAmount)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-slate-100 py-2">
-              <dt className="text-slate-500">GST on commission</dt>
-              <dd className="font-semibold tabular-nums">
-                {formatCurrency(insights.commission.gstOnCommission)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-slate-100 py-2">
-              <dt className="text-slate-500">TDS</dt>
-              <dd className="font-semibold tabular-nums">
-                {formatCurrency(insights.commission.tdsAmount)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 rounded-xl bg-emerald-50/70 px-3 py-2">
-              <dt className="font-medium text-emerald-700">Owner payout</dt>
-              <dd className="font-semibold text-emerald-700 tabular-nums">
-                {formatCurrency(insights.commission.ownerPayout)}
-              </dd>
-            </div>
-          </dl>
+          </div>
         </Panel>
       </div>
 

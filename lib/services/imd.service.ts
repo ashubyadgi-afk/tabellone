@@ -1,6 +1,24 @@
 import { prisma } from "@/lib/db";
 import type { BookingStatus, ImdStatus } from "@prisma/client";
-import { addDays, endOfDay, startOfDay, isWithinInterval, parseISO } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  endOfDay,
+  format,
+  startOfDay,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
+
+const STATUS_COLORS: Record<string, string> = {
+  active: "#10b981",
+  inactive: "#94a3b8",
+  under_maintenance: "#f59e0b",
+  draft: "#64748b",
+  temporarily_unavailable: "#F06B3B",
+};
+
+const TYPE_COLORS = ["#4C4BFF", "#8C47EE", "#F06B3B", "#10b981", "#E647A7", "#f59e0b"];
 
 export async function getImdDashboardStats(organizationId: string) {
   const now = new Date();
@@ -8,15 +26,71 @@ export async function getImdDashboardStats(organizationId: string) {
   const todayEnd = endOfDay(now);
   const in30Days = addDays(now, 30);
   const in7Days = addDays(now, 7);
-
-  const adSpaces = await prisma.adSpace.findMany({
-    where: { organizationId, imdStatus: { not: "archived" } },
-    include: {
-      bookings: {
-        where: { status: { in: ["confirmed", "active"] } },
-      },
-    },
+  const monthStart = startOfMonth(subMonths(now, 5));
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const start = startOfMonth(addMonths(monthStart, i));
+    return {
+      key: format(start, "yyyy-MM"),
+      label: format(start, "MMM yyyy"),
+      short: format(start, "MMM"),
+      start,
+      end: startOfMonth(addMonths(start, 1)),
+    };
   });
+
+  const [adSpaces, upcomingBookings, expiringSoon, recentClients, invoiceSummary, recentBookings, invoices, bookings] =
+    await Promise.all([
+      prisma.adSpace.findMany({
+        where: { organizationId, imdStatus: { not: "archived" } },
+        include: {
+          bookings: {
+            where: { status: { in: ["confirmed", "active"] } },
+          },
+          _count: { select: { bookings: true } },
+        },
+      }),
+      prisma.booking.count({
+        where: {
+          organizationId,
+          status: { in: ["confirmed", "active"] },
+          startDate: { gte: now, lte: in30Days },
+        },
+      }),
+      prisma.booking.count({
+        where: {
+          organizationId,
+          status: { in: ["confirmed", "active"] },
+          endDate: { gte: now, lte: in7Days },
+        },
+      }),
+      prisma.client.findMany({
+        where: { organizationId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      }),
+      prisma.invoice.aggregate({
+        where: {
+          organizationId,
+          issuedAt: { gte: new Date(now.getFullYear(), now.getMonth(), 1) },
+        },
+        _count: true,
+        _sum: { totalAmount: true },
+      }),
+      prisma.booking.findMany({
+        where: { organizationId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        include: { adSpace: true, client: true },
+      }),
+      prisma.invoice.findMany({
+        where: { organizationId, issuedAt: { gte: monthStart } },
+        select: { issuedAt: true, totalAmount: true },
+      }),
+      prisma.booking.findMany({
+        where: { organizationId, createdAt: { gte: monthStart } },
+        select: { createdAt: true, status: true, amount: true },
+      }),
+    ]);
 
   const totalAdSpaces = adSpaces.length;
   const activeAdSpaces = adSpaces.filter((a) => a.imdStatus === "active").length;
@@ -27,68 +101,97 @@ export async function getImdDashboardStats(organizationId: string) {
   const bookedTodayIds = new Set<string>();
   for (const space of adSpaces) {
     for (const b of space.bookings) {
-      if (
-        b.startDate <= todayEnd &&
-        b.endDate >= todayStart
-      ) {
+      if (b.startDate <= todayEnd && b.endDate >= todayStart) {
         bookedTodayIds.add(space.id);
       }
     }
   }
 
   const currentlyBooked = bookedTodayIds.size;
-  const available = activeAdSpaces - currentlyBooked;
+  const available = Math.max(0, activeAdSpaces - currentlyBooked);
 
-  const upcomingBookings = await prisma.booking.count({
-    where: {
-      organizationId,
-      status: { in: ["confirmed", "active"] },
-      startDate: { gte: now, lte: in30Days },
-    },
+  const statusCounts = new Map<string, number>();
+  for (const space of adSpaces) {
+    statusCounts.set(space.imdStatus, (statusCounts.get(space.imdStatus) ?? 0) + 1);
+  }
+  const inventoryMix = [...statusCounts.entries()].map(([name, value]) => ({
+    name: name.replaceAll("_", " "),
+    value,
+    color: STATUS_COLORS[name] ?? "#94a3b8",
+  }));
+
+  const occupancy = [
+    { name: "Booked now", value: currentlyBooked, color: "#F06B3B" },
+    { name: "Available", value: available, color: "#4C4BFF" },
+  ];
+
+  const typeCounts = new Map<string, number>();
+  for (const space of adSpaces) {
+    const key = space.adSpaceType || "other";
+    typeCounts.set(key, (typeCounts.get(key) ?? 0) + 1);
+  }
+  const spacesByType = [...typeCounts.entries()]
+    .map(([label, value], i) => ({
+      label: label.replaceAll("_", " "),
+      value,
+      color: TYPE_COLORS[i % TYPE_COLORS.length],
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const invoiceTrend = months.map((month) => {
+    const inMonth = invoices.filter(
+      (inv) => inv.issuedAt >= month.start && inv.issuedAt < month.end
+    );
+    return {
+      month: month.short,
+      label: month.label,
+      amount: inMonth.reduce((sum, inv) => sum + inv.totalAmount, 0),
+      count: inMonth.length,
+    };
   });
 
-  const expiringSoon = await prisma.booking.count({
-    where: {
-      organizationId,
-      status: { in: ["confirmed", "active"] },
-      endDate: { gte: now, lte: in7Days },
-    },
+  const bookingTrend = months.map((month) => {
+    const inMonth = bookings.filter(
+      (b) => b.createdAt >= month.start && b.createdAt < month.end
+    );
+    return {
+      month: month.short,
+      label: month.label,
+      bookings: inMonth.length,
+      amount: inMonth.reduce((sum, b) => sum + (b.amount ?? 0), 0),
+    };
   });
 
-  const recentClients = await prisma.client.findMany({
-    where: { organizationId },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  });
-
-  const invoiceSummary = await prisma.invoice.aggregate({
-    where: {
-      organizationId,
-      issuedAt: { gte: new Date(now.getFullYear(), now.getMonth(), 1) },
-    },
-    _count: true,
-    _sum: { totalAmount: true },
-  });
-
-  const recentBookings = await prisma.booking.findMany({
-    where: { organizationId },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-    include: { adSpace: true, client: true },
-  });
+  const topSpaces = [...adSpaces]
+    .sort((a, b) => b._count.bookings - a._count.bookings)
+    .slice(0, 6)
+    .map((space) => ({
+      name: space.name,
+      bookings: space._count.bookings,
+      city: space.city ?? "—",
+    }))
+    .filter((row) => row.bookings > 0);
 
   return {
     totalAdSpaces,
     activeAdSpaces,
     inactiveAdSpaces,
     currentlyBooked,
-    available: Math.max(0, available),
+    available,
     upcomingBookings,
     expiringSoon,
     recentClients,
     recentBookings,
     invoicesThisMonth: invoiceSummary._count,
     invoiceTotalThisMonth: invoiceSummary._sum.totalAmount ?? 0,
+    charts: {
+      inventoryMix,
+      occupancy,
+      spacesByType,
+      invoiceTrend,
+      bookingTrend,
+      topSpaces,
+    },
   };
 }
 

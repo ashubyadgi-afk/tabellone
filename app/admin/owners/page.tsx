@@ -1,30 +1,45 @@
-import { Badge, Input, Button } from "@/components/ui";
-import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
+import { Input, Button } from "@/components/ui";
+import { PageBanner, TotalCard } from "@/components/dashboard/DashboardUI";
+import {
+  FirmCard,
+  FirmEmptyState,
+  StatusFilterChips,
+  isApproved,
+  needsReview,
+  parseFirmStatusFilter,
+} from "@/components/admin/FirmListUI";
 import { formatDate } from "@/lib/utils";
-import Link from "next/link";
 import { listOwnerOrganizations } from "@/lib/services/admin.service";
-
-function verificationBadge(status?: string | null) {
-  if (!status) return <Badge variant="muted">no profile</Badge>;
-  if (status === "approved") return <Badge variant="success">approved</Badge>;
-  return <Badge variant="warning">{status.replaceAll("_", " ")}</Badge>;
-}
+import { Building2, CheckCircle2, ClipboardList, Layers, MapPin } from "lucide-react";
 
 export default async function AdminOwnersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, status: statusRaw } = await searchParams;
+  const status = parseFirmStatusFilter(statusRaw);
   const owners = await listOwnerOrganizations({ q });
 
+  const approvedCount = owners.filter((org) => isApproved(org.verificationStatus)).length;
+  const reviewCount = owners.filter((org) => needsReview(org.verificationStatus)).length;
+  const adSpacesTotal = owners.reduce((sum, org) => sum + org.adSpaceCount, 0);
+  const listedTotal = owners.reduce((sum, org) => sum + org.listedCount, 0);
+
+  const filtered = owners.filter((org) => {
+    if (status === "approved") return isApproved(org.verificationStatus);
+    if (status === "needs_review") return needsReview(org.verificationStatus);
+    return true;
+  });
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageBanner
         title="Owner firms"
         description="Ad-space owners: contact, verification, and inventory counts"
         action={
           <form className="flex gap-2">
+            {status !== "all" ? <input type="hidden" name="status" value={status} /> : null}
             <Input
               name="q"
               defaultValue={q}
@@ -37,66 +52,57 @@ export default async function AdminOwnersPage({
           </form>
         }
       />
-      <SurfaceCard className="overflow-hidden">
-        {owners.length === 0 ? (
-          <p className="px-6 py-10 text-sm text-slate-500">
-            No owner firms match this search.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px] text-sm">
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th className="px-6 py-3">Firm</th>
-                  <th className="px-6 py-3">Contact</th>
-                  <th className="px-6 py-3">Branch</th>
-                  <th className="px-6 py-3">Verification</th>
-                  <th className="px-6 py-3">Ad spaces</th>
-                  <th className="px-6 py-3">IMD bookings</th>
-                  <th className="px-6 py-3">Created</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {owners.map((org) => (
-                  <tr key={org.id} className="hover:bg-slate-50/80">
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/admin/owners/${org.id}`}
-                        className="font-medium text-slate-900 hover:text-[#4C4BFF]"
-                      >
-                        {org.name}
-                      </Link>
-                      {org.brandName && (
-                        <p className="text-xs text-slate-500">{org.brandName}</p>
-                      )}
-                      <p className="text-xs text-slate-400">{org.email}</p>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <p>{org.contactPerson || "—"}</p>
-                      <p className="text-xs text-slate-500">
-                        {org.contactPhone || "—"}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {org.branchLocation || "—"}
-                    </td>
-                    <td className="px-6 py-4">
-                      {verificationBadge(org.verificationStatus)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {org.adSpaceCount} total · {org.listedCount} listed
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{org.bookingCount}</td>
-                    <td className="px-6 py-4 text-slate-500">
-                      {formatDate(org.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </SurfaceCard>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <TotalCard label="Total firms" value={owners.length} icon={Building2} accent="indigo" />
+        <TotalCard label="Approved" value={approvedCount} icon={CheckCircle2} accent="emerald" />
+        <TotalCard label="Needs review" value={reviewCount} icon={ClipboardList} accent="amber" />
+        <TotalCard label="Ad spaces" value={adSpacesTotal} icon={Layers} accent="violet" />
+        <TotalCard label="Listed" value={listedTotal} icon={MapPin} accent="orange" />
+      </div>
+
+      <StatusFilterChips
+        basePath="/admin/owners"
+        q={q}
+        status={status}
+        counts={{ all: owners.length, approved: approvedCount, needs_review: reviewCount }}
+      />
+
+      {filtered.length === 0 ? (
+        <FirmEmptyState text="No owner firms match this search." />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((org) => (
+            <FirmCard
+              key={org.id}
+              href={`/admin/owners/${org.id}`}
+              title={org.name}
+              subtitle={org.brandName}
+              email={org.email}
+              status={org.verificationStatus}
+              metrics={[
+                { label: "Spaces", value: org.adSpaceCount },
+                { label: "Listed", value: org.listedCount },
+                { label: "Bookings", value: org.bookingCount },
+              ]}
+              details={
+                <>
+                  <p>
+                    <span className="font-medium text-slate-600">Contact</span>{" "}
+                    {org.contactPerson || "—"}
+                    {org.contactPhone ? ` · ${org.contactPhone}` : ""}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-600">Branch</span>{" "}
+                    {org.branchLocation || "—"}
+                  </p>
+                </>
+              }
+              footer={<span>Joined {formatDate(org.createdAt)}</span>}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

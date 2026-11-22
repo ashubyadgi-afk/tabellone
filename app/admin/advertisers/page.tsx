@@ -1,30 +1,51 @@
-import { Badge, Input, Button } from "@/components/ui";
-import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
+import { Input, Button } from "@/components/ui";
+import { PageBanner, TotalCard } from "@/components/dashboard/DashboardUI";
+import {
+  FirmCard,
+  FirmEmptyState,
+  StatusFilterChips,
+  isApproved,
+  needsReview,
+  parseFirmStatusFilter,
+} from "@/components/admin/FirmListUI";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import Link from "next/link";
 import { listAdvertiserOrganizations } from "@/lib/services/admin.service";
-
-function verificationBadge(status?: string | null) {
-  if (!status) return <Badge variant="muted">no profile</Badge>;
-  if (status === "approved") return <Badge variant="success">approved</Badge>;
-  return <Badge variant="warning">{status.replaceAll("_", " ")}</Badge>;
-}
+import {
+  Building2,
+  CheckCircle2,
+  ClipboardList,
+  Megaphone,
+  Inbox,
+} from "lucide-react";
 
 export default async function AdminAdvertisersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, status: statusRaw } = await searchParams;
+  const status = parseFirmStatusFilter(statusRaw);
   const advertisers = await listAdvertiserOrganizations({ q });
 
+  const approvedCount = advertisers.filter((org) => isApproved(org.verificationStatus)).length;
+  const reviewCount = advertisers.filter((org) => needsReview(org.verificationStatus)).length;
+  const campaignsTotal = advertisers.reduce((sum, org) => sum + org.campaignCount, 0);
+  const openRequestsTotal = advertisers.reduce((sum, org) => sum + org.openRequestCount, 0);
+
+  const filtered = advertisers.filter((org) => {
+    if (status === "approved") return isApproved(org.verificationStatus);
+    if (status === "needs_review") return needsReview(org.verificationStatus);
+    return true;
+  });
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageBanner
         title="Advertiser firms"
         description="Advertisers: tax IDs, campaigns, booking requests, and subscription"
         action={
           <form className="flex gap-2">
+            {status !== "all" ? <input type="hidden" name="status" value={status} /> : null}
             <Input
               name="q"
               defaultValue={q}
@@ -37,80 +58,70 @@ export default async function AdminAdvertisersPage({
           </form>
         }
       />
-      <SurfaceCard className="overflow-hidden">
-        {advertisers.length === 0 ? (
-          <p className="px-6 py-10 text-sm text-slate-500">
-            No advertiser firms match this search.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-sm">
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th className="px-6 py-3">Firm</th>
-                  <th className="px-6 py-3">Contact</th>
-                  <th className="px-6 py-3">GST / PAN</th>
-                  <th className="px-6 py-3">Verification</th>
-                  <th className="px-6 py-3">Campaigns</th>
-                  <th className="px-6 py-3">Requests</th>
-                  <th className="px-6 py-3">Wallet / plan</th>
-                  <th className="px-6 py-3">Created</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {advertisers.map((org) => (
-                  <tr key={org.id} className="hover:bg-slate-50/80">
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/admin/advertisers/${org.id}`}
-                        className="font-medium text-slate-900 hover:text-[#4C4BFF]"
-                      >
-                        {org.name}
-                      </Link>
-                      <p className="text-xs text-slate-500">{org.sector || "—"}</p>
-                      <p className="text-xs text-slate-400">{org.email}</p>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <p>{org.contactPerson || "—"}</p>
-                      <p className="text-xs text-slate-500">
-                        {org.contactPhone || "—"}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <p>{org.gstNumber || "GST —"}</p>
-                      <p className="text-xs text-slate-500">
-                        PAN {org.panMasked || "—"}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      {verificationBadge(org.verificationStatus)}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{org.campaignCount}</td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {org.bookingRequestCount} total · {org.openRequestCount} open
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <p>
-                        {org.walletBalance == null
-                          ? "No wallet"
-                          : formatCurrency(org.walletBalance)}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {org.subscriptionPlan
-                          ? `${org.subscriptionPlan} (${org.subscriptionStatus})`
-                          : "No plan"}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500">
-                      {formatDate(org.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </SurfaceCard>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <TotalCard label="Total firms" value={advertisers.length} icon={Building2} accent="indigo" />
+        <TotalCard label="Approved" value={approvedCount} icon={CheckCircle2} accent="emerald" />
+        <TotalCard label="Needs review" value={reviewCount} icon={ClipboardList} accent="amber" />
+        <TotalCard label="Campaigns" value={campaignsTotal} icon={Megaphone} accent="violet" />
+        <TotalCard label="Open requests" value={openRequestsTotal} icon={Inbox} accent="orange" />
+      </div>
+
+      <StatusFilterChips
+        basePath="/admin/advertisers"
+        q={q}
+        status={status}
+        counts={{ all: advertisers.length, approved: approvedCount, needs_review: reviewCount }}
+      />
+
+      {filtered.length === 0 ? (
+        <FirmEmptyState text="No advertiser firms match this search." />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((org) => (
+            <FirmCard
+              key={org.id}
+              href={`/admin/advertisers/${org.id}`}
+              title={org.name}
+              subtitle={org.sector}
+              email={org.email}
+              status={org.verificationStatus}
+              metrics={[
+                { label: "Campaigns", value: org.campaignCount },
+                { label: "Open", value: org.openRequestCount },
+                {
+                  label: "Wallet",
+                  value:
+                    org.walletBalance == null ? "—" : formatCurrency(org.walletBalance),
+                },
+              ]}
+              details={
+                <>
+                  <p>
+                    <span className="font-medium text-slate-600">Contact</span>{" "}
+                    {org.contactPerson || "—"}
+                    {org.contactPhone ? ` · ${org.contactPhone}` : ""}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-600">GST</span> {org.gstNumber || "—"}
+                    <span className="mx-1.5 text-slate-300">·</span>
+                    <span className="font-medium text-slate-600">PAN</span> {org.panMasked || "—"}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-600">Plan</span>{" "}
+                    {org.subscriptionPlan
+                      ? `${org.subscriptionPlan} (${org.subscriptionStatus})`
+                      : "No plan"}
+                    <span className="mx-1.5 text-slate-300">·</span>
+                    {org.bookingRequestCount} requests total
+                  </p>
+                </>
+              }
+              footer={<span>Joined {formatDate(org.createdAt)}</span>}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

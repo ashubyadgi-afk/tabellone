@@ -6,6 +6,14 @@ import { StatCard, Badge } from "@/components/ui";
 import { Panel } from "@/components/dashboard/DashboardUI";
 import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
+  BookingTrendChart,
+  InventoryMixChart,
+  InvoiceTrendChart,
+  OccupancyChart,
+  SpacesByTypeChart,
+  TopSpacesChart,
+} from "@/components/owner/OwnerDashboardCharts";
+import {
   Layers,
   CheckCircle2,
   XCircle,
@@ -15,6 +23,12 @@ import {
   Users,
   FileText,
   Plus,
+  PieChart,
+  Activity,
+  LayoutGrid,
+  IndianRupee,
+  TrendingUp,
+  MapPin,
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -115,6 +129,27 @@ export default async function ImdDashboardPage() {
           accent="emerald"
           href="/owner/imd/invoices"
         />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Panel title="Inventory mix" description="Ad Spaces by IMD status" icon={PieChart}>
+          <InventoryMixChart data={stats.charts.inventoryMix} />
+        </Panel>
+        <Panel title="Occupancy today" description="Active spaces booked vs available" icon={Activity}>
+          <OccupancyChart data={stats.charts.occupancy} />
+        </Panel>
+        <Panel title="Spaces by type" description="Inventory mix by format" icon={LayoutGrid}>
+          <SpacesByTypeChart data={stats.charts.spacesByType} />
+        </Panel>
+        <Panel title="Top spaces" description="Most booked Ad Spaces" icon={MapPin}>
+          <TopSpacesChart data={stats.charts.topSpaces} />
+        </Panel>
+        <Panel title="Invoice revenue" description="Issued invoice totals over 6 months" icon={IndianRupee}>
+          <InvoiceTrendChart data={stats.charts.invoiceTrend} />
+        </Panel>
+        <Panel title="Booking activity" description="Bookings created over 6 months" icon={TrendingUp}>
+          <BookingTrendChart data={stats.charts.bookingTrend} />
+        </Panel>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
