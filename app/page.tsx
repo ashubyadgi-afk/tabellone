@@ -14,17 +14,11 @@ import { getSession } from "@/lib/auth/session";
 import { listCartAdSpaceIds } from "@/lib/services/cart.service";
 import { listWishlistAdSpaceIds } from "@/lib/services/wishlist.service";
 import { PublicNav } from "@/components/layout/PublicNav";
-import dynamic from "next/dynamic";
 import { AiSearchBar } from "@/components/marketplace/AiSearchBar";
 import { MarketplaceSearchForm } from "@/components/marketplace/MarketplaceSearchForm";
+import { LazyAiChatWidget as AiChatWidget } from "@/components/marketplace/LazyAiChatWidget";
 import { getHomePricedListings } from "@/lib/marketplace/home-listings";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
-
-const AiChatWidget = dynamic(
-  () =>
-    import("@/components/marketplace/AiChatWidget").then((mod) => mod.AiChatWidget),
-  { ssr: false }
-);
 
 type ListedSpace = Awaited<ReturnType<typeof getHomePricedListings>>[number]["space"];
 

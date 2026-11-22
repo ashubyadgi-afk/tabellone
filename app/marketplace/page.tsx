@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import { getSession } from "@/lib/auth/session";
 import { PublicNav } from "@/components/layout/PublicNav";
 import { AdSpaceCard } from "@/components/marketplace/AdSpaceCard";
 import { MarketplaceSearchForm } from "@/components/marketplace/MarketplaceSearchForm";
 import { PopularFilters } from "@/components/marketplace/PopularFilters";
+import { LazyAiChatWidget as AiChatWidget } from "@/components/marketplace/LazyAiChatWidget";
 import {
   listPublicAdSpaces,
   marketplaceFiltersFromParams,
@@ -12,12 +12,6 @@ import {
 import { pricePublicListings } from "@/lib/services/pricing.service";
 import { listCartAdSpaceIds } from "@/lib/services/cart.service";
 import { listWishlistAdSpaceIds } from "@/lib/services/wishlist.service";
-
-const AiChatWidget = dynamic(
-  () =>
-    import("@/components/marketplace/AiChatWidget").then((mod) => mod.AiChatWidget),
-  { ssr: false }
-);
 
 type PageProps = {
   searchParams: Promise<{
