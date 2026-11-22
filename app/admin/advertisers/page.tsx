@@ -1,4 +1,5 @@
-import { PageHeader, Badge, Card, Input, Button } from "@/components/ui";
+import { Badge, Input, Button } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { listAdvertiserOrganizations } from "@/lib/services/admin.service";
@@ -19,7 +20,7 @@ export default async function AdminAdvertisersPage({
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Advertiser firms"
         description="Advertisers: tax IDs, campaigns, booking requests, and subscription"
         action={
@@ -36,7 +37,7 @@ export default async function AdminAdvertisersPage({
           </form>
         }
       />
-      <Card className="overflow-hidden">
+      <SurfaceCard className="overflow-hidden">
         {advertisers.length === 0 ? (
           <p className="px-6 py-10 text-sm text-slate-500">
             No advertiser firms match this search.
@@ -44,7 +45,7 @@ export default async function AdminAdvertisersPage({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1080px] text-sm">
-              <thead className="border-b border-slate-100 bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+              <thead className={TABLE_HEAD}>
                 <tr>
                   <th className="px-6 py-3">Firm</th>
                   <th className="px-6 py-3">Contact</th>
@@ -109,7 +110,7 @@ export default async function AdminAdvertisersPage({
             </table>
           </div>
         )}
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
+import { Button, Input, Label, Select } from "@/components/ui";
+import { PageBanner, SurfaceCard } from "@/components/dashboard/DashboardUI";
 import { LocationPicker } from "@/components/map/LocationPicker";
 import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
 import { PeakTrafficField } from "@/components/ad-space/PeakTrafficField";
@@ -97,14 +98,14 @@ export default function NewAdSpacePage() {
 
   return (
     <div>
-      <PageHeader title="New Ad Space" description="Add inventory to IMD" />
+      <PageBanner title="New Ad Space" description="Add inventory to IMD" />
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)]">
-      <Card className="p-6">
+      <SurfaceCard className="p-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -269,7 +270,7 @@ export default function NewAdSpacePage() {
             </Link>
           </div>
         </form>
-      </Card>
+      </SurfaceCard>
       <aside className="lg:sticky lg:top-24">
         <AdSpacePreview
           values={{

@@ -8,7 +8,8 @@ import {
   parseAdSpaceListFilter,
   type AdSpaceListFilter,
 } from "@/lib/services/imd.service";
-import { PageHeader, Button, Card, Badge } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { Plus, Pencil } from "lucide-react";
 import { DeleteAdSpaceButton } from "@/components/ad-space/DeleteAdSpaceButton";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title={copy.title}
         description={copy.description}
         action={
@@ -70,9 +71,9 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
         ))}
       </div>
 
-      <Card className="overflow-hidden">
+      <SurfaceCard className="overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className={TABLE_HEAD}>
             <tr>
               <th className="px-6 py-4">ID / Name</th>
               <th className="px-6 py-4">Category</th>
@@ -91,12 +92,12 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
                   {filter === "all" ? (
                     <Link
                       href="/owner/imd/ad-spaces/new"
-                      className="text-[#1e3a5f] hover:underline"
+                      className="text-[#4C4BFF] hover:underline"
                     >
                       Create your first
                     </Link>
                   ) : (
-                    <Link href="/owner/imd/ad-spaces" className="text-[#1e3a5f] hover:underline">
+                    <Link href="/owner/imd/ad-spaces" className="text-[#4C4BFF] hover:underline">
                       View all
                     </Link>
                   )}
@@ -119,7 +120,7 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
                         <div>
                           <Link
                             href={`/owner/imd/ad-spaces/${a.id}/edit`}
-                            className="font-medium text-slate-900 hover:text-[#1e3a5f] hover:underline"
+                            className="font-medium text-slate-900 hover:text-[#4C4BFF] hover:underline"
                           >
                             {a.name}
                           </Link>
@@ -146,7 +147,7 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
                       <div className="inline-flex flex-col items-end gap-2">
                         <Link
                           href={`/owner/imd/ad-spaces/${a.id}/edit`}
-                          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1e3a5f] hover:underline"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4C4BFF] hover:underline"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                           Edit
@@ -160,7 +161,7 @@ export default async function AdSpacesPage({ searchParams }: PageProps) {
             )}
           </tbody>
         </table>
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

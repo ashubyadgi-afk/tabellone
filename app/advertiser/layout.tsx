@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getLiveSession, redirectToRoleArea } from "@/lib/auth/live-session";
 import { prisma } from "@/lib/db";
 import { AdvertiserSidebar } from "@/components/layout/AdvertiserSidebar";
-
 export default async function AdvertiserLayout({
   children,
 }: {

@@ -5,7 +5,8 @@ import { prisma } from "@/lib/db";
 import { BOOKING_STATUS_LABELS, IMD_STATUS_LABELS } from "@/lib/services/imd.service";
 import { adSpaceTypeLabel } from "@/lib/marketplace/search";
 import { HoverInfo } from "@/components/owner/HoverInfo";
-import { PageHeader, Button, Card, Badge } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { Plus } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export default async function BookingsPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Bookings"
         description="Client bookings linked to Ad Spaces"
         action={
@@ -43,9 +44,9 @@ export default async function BookingsPage() {
           </div>
         }
       />
-      <Card className="overflow-hidden">
+      <SurfaceCard className="overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className={TABLE_HEAD}>
             <tr>
               <th className="px-6 py-4">Ad Space</th>
               <th className="px-6 py-4">Client</th>
@@ -100,7 +101,7 @@ export default async function BookingsPage() {
                   </td>
                   <td className="px-6 py-4">
                     {b.invoice ? (
-                      <Link href={`/owner/imd/invoices/${b.invoice.id}`} className="text-[#1e3a5f] hover:underline">
+                      <Link href={`/owner/imd/invoices/${b.invoice.id}`} className="text-[#4C4BFF] hover:underline">
                         {b.invoice.invoiceNumber}
                       </Link>
                     ) : (
@@ -112,7 +113,7 @@ export default async function BookingsPage() {
             )}
           </tbody>
         </table>
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

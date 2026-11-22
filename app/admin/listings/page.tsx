@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PageHeader, Badge } from "@/components/ui";
+import { Badge } from "@/components/ui";
+import { PageBanner } from "@/components/dashboard/DashboardUI";
 import { adSpaceTypeLabel } from "@/lib/marketplace/search";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 
@@ -42,7 +43,7 @@ export default function AdminListingsPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Listing approvals"
         description="Approved, rejected, and waiting ads are listed here, with the latest updates at the top. Open an ad to see its history."
       />
@@ -108,7 +109,7 @@ export default function AdminListingsPage() {
                     </span>
                   </div>
                 </div>
-                <span className="text-sm font-medium text-[#1e3a5f]">Details</span>
+                <span className="text-sm font-medium text-[#4C4BFF]">Details</span>
               </Link>
             );
           })}

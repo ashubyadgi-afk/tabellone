@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { PageHeader, Badge, Card } from "@/components/ui";
+import { Badge } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { getOwnerOrganizationDetail } from "@/lib/services/admin.service";
 
@@ -30,7 +31,7 @@ export default async function AdminOwnerDetailPage({
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title={org.name}
         description="Read-only owner firm details"
         action={
@@ -44,7 +45,7 @@ export default async function AdminOwnerDetailPage({
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="p-6">
+        <SurfaceCard className="p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-900">Company</h2>
           <Row label="Legal name" value={org.name} />
           <Row label="Brand" value={org.brandName} />
@@ -55,18 +56,18 @@ export default async function AdminOwnerDetailPage({
           <Row label="Branch" value={org.branchLocation} />
           <Row label="Org status" value={org.status} />
           <Row label="Joined" value={formatDate(org.createdAt)} />
-        </Card>
-        <Card className="p-6">
+        </SurfaceCard>
+        <SurfaceCard className="p-6">
           <h2 className="mb-3 text-sm font-semibold text-slate-900">Owner profile</h2>
           <div className="mb-3">{verificationBadge(org.verificationStatus)}</div>
           <Row label="Agency" value={org.agencyName} />
           <Row label="Office address" value={org.officeAddress} />
           <Row label="Spaces claimed" value={org.totalAdSpacesClaimed} />
           <Row label="Inventory" value={`${org.adSpaces.length} · ${org.listedCount} listed`} />
-        </Card>
+        </SurfaceCard>
       </div>
 
-      <Card className="mt-6 overflow-hidden">
+      <SurfaceCard className="mt-6 overflow-hidden">
         <h2 className="border-b border-slate-100 px-6 py-4 text-sm font-semibold text-slate-900">
           Login accounts
         </h2>
@@ -74,7 +75,7 @@ export default async function AdminOwnerDetailPage({
           <p className="px-6 py-6 text-sm text-slate-500">No users on this firm.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <thead className={TABLE_HEAD}>
               <tr>
                 <th className="px-6 py-3">Email</th>
                 <th className="px-6 py-3">Role</th>
@@ -96,9 +97,9 @@ export default async function AdminOwnerDetailPage({
             </tbody>
           </table>
         )}
-      </Card>
+      </SurfaceCard>
 
-      <Card className="mt-6 overflow-hidden">
+      <SurfaceCard className="mt-6 overflow-hidden">
         <h2 className="border-b border-slate-100 px-6 py-4 text-sm font-semibold text-slate-900">
           Inventory
         </h2>
@@ -107,7 +108,7 @@ export default async function AdminOwnerDetailPage({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+              <thead className={TABLE_HEAD}>
                 <tr>
                   <th className="px-6 py-3">Space</th>
                   <th className="px-6 py-3">Type</th>
@@ -155,9 +156,9 @@ export default async function AdminOwnerDetailPage({
             </table>
           </div>
         )}
-      </Card>
+      </SurfaceCard>
 
-      <Card className="mt-6 overflow-hidden">
+      <SurfaceCard className="mt-6 overflow-hidden">
         <h2 className="border-b border-slate-100 px-6 py-4 text-sm font-semibold text-slate-900">
           Recent IMD bookings
         </h2>
@@ -165,7 +166,7 @@ export default async function AdminOwnerDetailPage({
           <p className="px-6 py-6 text-sm text-slate-500">No IMD bookings yet.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <thead className={TABLE_HEAD}>
               <tr>
                 <th className="px-6 py-3">Space</th>
                 <th className="px-6 py-3">Client</th>
@@ -191,7 +192,7 @@ export default async function AdminOwnerDetailPage({
             </tbody>
           </table>
         )}
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

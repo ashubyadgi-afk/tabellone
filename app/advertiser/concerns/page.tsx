@@ -8,7 +8,7 @@ import {
   PageBanner,
   Panel,
   TotalCard,
-} from "@/components/advertiser/AdvertiserUI";
+} from "@/components/dashboard/DashboardUI";
 import { CheckCircle2, CircleDot, MessageSquarePlus, MessagesSquare, Search } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 

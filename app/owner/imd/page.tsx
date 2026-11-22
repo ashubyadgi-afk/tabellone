@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getImdDashboardStats } from "@/lib/services/imd.service";
-import { Card, StatCard, PageHeader, Badge, Button } from "@/components/ui";
+import { StatCard, Badge } from "@/components/ui";
+import { Panel } from "@/components/dashboard/DashboardUI";
+import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
   Layers,
   CheckCircle2,
@@ -23,21 +25,37 @@ export default async function ImdDashboardPage() {
   const stats = await getImdDashboardStats(session.organizationId);
 
   return (
-    <div>
-      <PageHeader
-        title="Inventory Management Dashboard"
-        description="IMD — manage AdSpaces, clients, bookings, and invoices"
-        action={
-          <div className="flex gap-2">
-            <Link href="/owner/imd/ad-spaces/new">
-              <Button size="sm"><Plus className="h-4 w-4" /> Ad Space</Button>
+    <div className="space-y-8">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#4C4BFF] via-[#5E49F6] to-[#8C47EE] px-7 py-8 text-white shadow-[0_20px_40px_-20px_rgba(76,75,255,0.6)] sm:px-9">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-24 right-40 h-56 w-56 rounded-full bg-[#F06B3B]/30 blur-3xl" />
+        <BannerAccountActions className="absolute right-5 top-5 z-10 sm:right-7" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">Owner</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Inventory Management Dashboard
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-white/80">
+              IMD — manage AdSpaces, clients, bookings, and invoices
+            </p>
+          </div>
+          <div className="flex gap-2 self-start sm:self-auto">
+            <Link
+              href="/owner/imd/ad-spaces/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#4C4BFF] shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:bg-white/95"
+            >
+              <Plus className="h-4 w-4" /> Ad Space
             </Link>
-            <Link href="/owner/imd/bookings/new">
-              <Button size="sm" variant="secondary"><Plus className="h-4 w-4" /> Booking</Button>
+            <Link
+              href="/owner/imd/bookings/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/30 transition hover:-translate-y-0.5 hover:bg-white/25"
+            >
+              <Plus className="h-4 w-4" /> Booking
             </Link>
           </div>
-        }
-      />
+        </div>
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -99,22 +117,23 @@ export default async function ImdDashboardPage() {
         />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Users className="h-4 w-4 text-slate-400" /> Recent clients
-            </h2>
-            <Link href="/owner/imd/clients" className="text-sm text-[#1e3a5f] hover:underline">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel
+          title="Recent clients"
+          icon={Users}
+          bodyClassName="p-0"
+          aside={
+            <Link href="/owner/imd/clients" className="text-sm font-semibold text-[#4C4BFF] hover:underline">
               View all
             </Link>
-          </div>
+          }
+        >
           <ul className="divide-y divide-slate-100">
             {stats.recentClients.length === 0 ? (
               <li className="px-6 py-8 text-center text-sm text-slate-500">No clients yet</li>
             ) : (
               stats.recentClients.map((c) => (
-                <li key={c.id} className="flex items-center justify-between px-6 py-3">
+                <li key={c.id} className="flex items-center justify-between px-5 py-3 transition hover:bg-slate-50/80">
                   <div>
                     <p className="font-medium text-slate-900">{c.name}</p>
                     {c.businessName && (
@@ -126,23 +145,24 @@ export default async function ImdDashboardPage() {
               ))
             )}
           </ul>
-        </Card>
+        </Panel>
 
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-            <h2 className="font-semibold flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-slate-400" /> Recent activity
-            </h2>
-            <Link href="/owner/imd/bookings" className="text-sm text-[#1e3a5f] hover:underline">
+        <Panel
+          title="Recent activity"
+          icon={CalendarClock}
+          bodyClassName="p-0"
+          aside={
+            <Link href="/owner/imd/bookings" className="text-sm font-semibold text-[#4C4BFF] hover:underline">
               View all
             </Link>
-          </div>
+          }
+        >
           <ul className="divide-y divide-slate-100">
             {stats.recentBookings.length === 0 ? (
               <li className="px-6 py-8 text-center text-sm text-slate-500">No bookings yet</li>
             ) : (
               stats.recentBookings.map((b) => (
-                <li key={b.id} className="px-6 py-3">
+                <li key={b.id} className="px-5 py-3 transition hover:bg-slate-50/80">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-medium text-slate-900">{b.adSpace.name}</p>
@@ -157,7 +177,7 @@ export default async function ImdDashboardPage() {
               ))
             )}
           </ul>
-        </Card>
+        </Panel>
       </div>
     </div>
   );

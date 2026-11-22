@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 
 export type Accent = "indigo" | "amber" | "emerald" | "violet" | "rose" | "slate" | "orange";
 
@@ -33,15 +34,30 @@ export function PageBanner({
   return (
     <section className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-[#4C4BFF] via-[#5E49F6] to-[#8C47EE] px-6 py-5 text-white shadow-[0_14px_30px_-18px_rgba(76,75,255,0.6)] sm:px-7">
       <div className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <BannerAccountActions className="absolute right-4 top-4 z-10 sm:right-5" />
+      <div className="relative flex flex-col gap-4 pr-24 sm:flex-row sm:items-end sm:justify-between sm:pr-0">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {description ? <p className="mt-1 max-w-2xl text-sm text-white/80">{description}</p> : null}
         </div>
-        {action}
+        {action ? (
+          <div className="self-start rounded-xl bg-white/95 p-1.5 text-slate-900 shadow-lg shadow-black/10 sm:mt-10 sm:self-auto">
+            {action}
+          </div>
+        ) : null}
       </div>
     </section>
   );
+}
+
+export function SurfaceCard({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return <div className={cn(SURFACE, className)}>{children}</div>;
 }
 
 export function TotalCard({
@@ -130,7 +146,7 @@ export function Panel({
         </div>
         {aside}
       </header>
-      <div className={cn("p-5", bodyClassName)}>{children}</div>
+      <div className={bodyClassName ?? "p-5"}>{children}</div>
     </section>
   );
 }

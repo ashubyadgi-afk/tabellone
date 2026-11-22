@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { PageBanner } from "@/components/advertiser/AdvertiserUI";
+import { PageBanner } from "@/components/dashboard/DashboardUI";
 import { Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 

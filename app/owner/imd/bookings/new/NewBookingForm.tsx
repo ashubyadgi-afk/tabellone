@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
+import { Button, Input, Label, Select } from "@/components/ui";
+import { PageBanner, SurfaceCard } from "@/components/dashboard/DashboardUI";
 
 type Option = { id: string; name: string; basePrice?: number | null };
 
@@ -130,11 +131,11 @@ export function NewBookingForm({
 
   return (
     <div>
-      <PageHeader title="New Booking" description="Link a client to an Ad Space for a date range" />
+      <PageBanner title="New Booking" description="Link a client to an Ad Space for a date range" />
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
-      <Card className="max-w-xl p-6">
+      <SurfaceCard className="max-w-xl p-6">
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label>Ad Space *</Label>
@@ -151,7 +152,7 @@ export function NewBookingForm({
               <button
                 type="button"
                 onClick={openAddClient}
-                className="text-sm font-medium text-[#1e3a5f] hover:underline"
+                className="text-sm font-medium text-[#4C4BFF] hover:underline"
               >
                 + Add client
               </button>
@@ -202,7 +203,7 @@ export function NewBookingForm({
             <Link href="/owner/imd/bookings"><Button variant="secondary">Cancel</Button></Link>
           </div>
         </form>
-      </Card>
+      </SurfaceCard>
 
       {showAddClient && (
         <div

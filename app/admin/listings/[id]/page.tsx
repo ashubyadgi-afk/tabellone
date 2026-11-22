@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { PageHeader, Button, Badge } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { PageBanner } from "@/components/dashboard/DashboardUI";
 import {
   ListingReviewHistory,
   type ListingReviewEventView,
@@ -87,7 +88,7 @@ export default function AdminListingDetailPage() {
   if (missing || !listing) {
     return (
       <div>
-        <Link href="/admin/listings" className="text-sm font-medium text-[#1e3a5f]">
+        <Link href="/admin/listings" className="text-sm font-medium text-[#4C4BFF]">
           Back to listing approvals
         </Link>
         <p className="mt-4 text-slate-500">This listing could not be found.</p>
@@ -101,10 +102,10 @@ export default function AdminListingDetailPage() {
 
   return (
     <div>
-      <Link href="/admin/listings" className="text-sm font-medium text-[#1e3a5f]">
+      <Link href="/admin/listings" className="text-sm font-medium text-[#4C4BFF]">
         Back to listing approvals
       </Link>
-      <PageHeader
+      <PageBanner
         title={space.name}
         description={`${space.organization.name}${space.adSpaceNumber ? ` · ${space.adSpaceNumber}` : ""}`}
       />

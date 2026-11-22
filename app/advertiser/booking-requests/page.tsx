@@ -10,7 +10,7 @@ import {
   TABLE_HEAD,
   TABLE_ROW,
   TotalCard,
-} from "@/components/advertiser/AdvertiserUI";
+} from "@/components/dashboard/DashboardUI";
 import { CalendarClock, CheckCircle2, History, IndianRupee, MapPin } from "lucide-react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 

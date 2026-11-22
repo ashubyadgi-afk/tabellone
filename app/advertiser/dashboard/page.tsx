@@ -2,7 +2,8 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui";
-import { EmptyState, Panel, TotalCard } from "@/components/advertiser/AdvertiserUI";
+import { EmptyState, Panel, TotalCard } from "@/components/dashboard/DashboardUI";
+import { BannerAccountActions } from "@/components/layout/BannerAccountActions";
 import {
   BookingTimeline,
   CampaignBudgetChart,
@@ -251,6 +252,7 @@ export default async function AdvertiserDashboardPage() {
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#4C4BFF] via-[#5E49F6] to-[#8C47EE] px-7 py-8 text-white shadow-[0_20px_40px_-20px_rgba(76,75,255,0.6)] sm:px-9">
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-24 right-40 h-56 w-56 rounded-full bg-[#F06B3B]/30 blur-3xl" />
+        <BannerAccountActions className="absolute right-5 top-5 z-10 sm:right-7" />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">Advertiser</p>

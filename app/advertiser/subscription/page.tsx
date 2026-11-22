@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { Badge } from "@/components/ui";
-import { PageBanner, SURFACE } from "@/components/advertiser/AdvertiserUI";
+import { PageBanner, SURFACE } from "@/components/dashboard/DashboardUI";
 import { Crown } from "lucide-react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 

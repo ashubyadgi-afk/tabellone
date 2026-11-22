@@ -9,7 +9,7 @@ import {
   PageBanner,
   Panel,
   TotalCard,
-} from "@/components/advertiser/AdvertiserUI";
+} from "@/components/dashboard/DashboardUI";
 import { ArrowUpRight, CheckCircle2, Megaphone, Plus, XCircle, type LucideIcon } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 

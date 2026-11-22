@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Input, Label } from "@/components/ui";
-import { PageBanner, Panel, SURFACE } from "@/components/advertiser/AdvertiserUI";
+import { PageBanner, Panel, SURFACE } from "@/components/dashboard/DashboardUI";
 import { Building2, KeyRound, Mail } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 

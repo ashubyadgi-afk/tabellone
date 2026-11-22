@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
+import { TotalCard } from "@/components/dashboard/DashboardUI";
 
 export function Card({
   className,
@@ -36,42 +36,16 @@ export function StatCard({
   accent?: "blue" | "emerald" | "amber" | "violet" | "rose" | "slate";
   href?: string;
 }) {
-  const accents = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    violet: "bg-violet-50 text-violet-600",
-    rose: "bg-rose-50 text-rose-600",
-    slate: "bg-slate-100 text-slate-600",
-  };
-
-  const content = (
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-          {value}
-        </p>
-        {sub && <p className="mt-1 text-xs text-slate-400">{sub}</p>}
-      </div>
-      <div className={cn("rounded-xl p-3", accents[accent])}>
-        <Icon className="h-5 w-5" />
-      </div>
-    </div>
+  return (
+    <TotalCard
+      label={label}
+      value={value}
+      sub={sub}
+      icon={Icon}
+      accent={accent === "blue" ? "indigo" : accent}
+      href={href}
+    />
   );
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        className="block rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/50 transition hover:border-[#1e3a5f]/20 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/20"
-      >
-        {content}
-      </Link>
-    );
-  }
-
-  return <Card className="p-5 transition hover:shadow-md">{content}</Card>;
 }
 
 export function Badge({

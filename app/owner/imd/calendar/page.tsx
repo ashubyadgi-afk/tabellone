@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { PageHeader, Card, Badge, Button } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
+import { PageBanner, SurfaceCard } from "@/components/dashboard/DashboardUI";
 import { formatDate } from "@/lib/utils";
 import {
   addMonths,
@@ -60,7 +61,7 @@ export default async function CalendarPage({
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Availability Calendar"
         description={format(monthStart, "MMMM yyyy")}
         action={
@@ -85,7 +86,7 @@ export default async function CalendarPage({
           </div>
         }
       />
-      <Card className="p-6">
+      <SurfaceCard className="p-6">
         <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500 mb-2">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
             <div key={d}>{d}</div>
@@ -128,9 +129,9 @@ export default async function CalendarPage({
             );
           })}
         </div>
-      </Card>
+      </SurfaceCard>
 
-      <Card className="mt-6 p-6">
+      <SurfaceCard className="mt-6 p-6">
         <h2 className="font-semibold">Upcoming bookings</h2>
         <ul className="mt-4 space-y-3">
           {bookings.length === 0 ? (
@@ -154,7 +155,7 @@ export default async function CalendarPage({
             ))
           )}
         </ul>
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { PageHeader, Card } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { GenerateInvoiceButton } from "./GenerateInvoiceButton";
 
@@ -30,10 +30,10 @@ export default async function InvoicesPage() {
 
   return (
     <div>
-      <PageHeader title="Invoices" description="Generate and print invoices from bookings" />
+      <PageBanner title="Invoices" description="Generate and print invoices from bookings" />
 
       {bookingsWithoutInvoice.length > 0 && (
-        <Card className="mb-6 p-6">
+        <SurfaceCard className="mb-6 p-6">
           <h2 className="font-semibold text-slate-900">Ready to invoice</h2>
           <ul className="mt-4 space-y-3">
             {bookingsWithoutInvoice.map((b) => (
@@ -45,12 +45,12 @@ export default async function InvoicesPage() {
               </li>
             ))}
           </ul>
-        </Card>
+        </SurfaceCard>
       )}
 
-      <Card className="overflow-hidden">
+      <SurfaceCard className="overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className={TABLE_HEAD}>
             <tr>
               <th className="px-6 py-4">Invoice #</th>
               <th className="px-6 py-4">Booking</th>
@@ -74,7 +74,7 @@ export default async function InvoicesPage() {
                   <td className="px-6 py-4 font-medium">{formatCurrency(inv.totalAmount)}</td>
                   <td className="px-6 py-4 text-slate-500">{formatDate(inv.issuedAt)}</td>
                   <td className="px-6 py-4">
-                    <Link href={`/owner/imd/invoices/${inv.id}`} className="text-[#1e3a5f] hover:underline">
+                    <Link href={`/owner/imd/invoices/${inv.id}`} className="text-[#4C4BFF] hover:underline">
                       View / Print
                     </Link>
                   </td>
@@ -83,7 +83,7 @@ export default async function InvoicesPage() {
             )}
           </tbody>
         </table>
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
-import { PageHeader, Button, Badge } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { PageBanner } from "@/components/dashboard/DashboardUI";
 import {
   ListingReviewHistory,
   type ListingReviewEventView,
@@ -58,7 +59,7 @@ export default function OwnerMarketplacePage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="List on Marketplace"
         description="Submit AdSpaces for admin approval to appear publicly"
       />
@@ -106,7 +107,7 @@ export default function OwnerMarketplacePage() {
                 {canEdit ? (
                   <Link
                     href={`/owner/imd/ad-spaces/${space.id}/edit?returnTo=/owner/marketplace`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#1e3a5f]/20 bg-[#1e3a5f]/5 px-3 py-1.5 text-sm font-medium text-[#1e3a5f] hover:bg-[#1e3a5f]/10"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#4C4BFF]/20 bg-[#4C4BFF]/5 px-3 py-1.5 text-sm font-medium text-[#4C4BFF] hover:bg-[#4C4BFF]/10"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Edit

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Label, PageHeader, Card } from "@/components/ui";
+import { Button, Input, Label } from "@/components/ui";
+import { PageBanner, SurfaceCard } from "@/components/dashboard/DashboardUI";
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -39,11 +40,11 @@ export default function NewClientPage() {
 
   return (
     <div>
-      <PageHeader title="New Client" />
+      <PageBanner title="New Client" />
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
-      <Card className="max-w-xl p-6">
+      <SurfaceCard className="max-w-xl p-6">
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label>Client name *</Label>
@@ -76,7 +77,7 @@ export default function NewClientPage() {
             <Link href="/owner/imd/clients"><Button variant="secondary">Cancel</Button></Link>
           </div>
         </form>
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

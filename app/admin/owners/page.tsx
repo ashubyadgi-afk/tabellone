@@ -1,4 +1,5 @@
-import { PageHeader, Badge, Card, Input, Button } from "@/components/ui";
+import { Badge, Input, Button } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { listOwnerOrganizations } from "@/lib/services/admin.service";
@@ -19,7 +20,7 @@ export default async function AdminOwnersPage({
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Owner firms"
         description="Ad-space owners: contact, verification, and inventory counts"
         action={
@@ -36,7 +37,7 @@ export default async function AdminOwnersPage({
           </form>
         }
       />
-      <Card className="overflow-hidden">
+      <SurfaceCard className="overflow-hidden">
         {owners.length === 0 ? (
           <p className="px-6 py-10 text-sm text-slate-500">
             No owner firms match this search.
@@ -44,7 +45,7 @@ export default async function AdminOwnersPage({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[960px] text-sm">
-              <thead className="border-b border-slate-100 bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+              <thead className={TABLE_HEAD}>
                 <tr>
                   <th className="px-6 py-3">Firm</th>
                   <th className="px-6 py-3">Contact</th>
@@ -95,7 +96,7 @@ export default async function AdminOwnersPage({
             </table>
           </div>
         )}
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

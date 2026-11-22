@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { HoverInfo } from "@/components/owner/HoverInfo";
-import { PageHeader, Button, Card } from "@/components/ui";
+import { Button } from "@/components/ui";
+import { PageBanner, SurfaceCard, TABLE_HEAD } from "@/components/dashboard/DashboardUI";
 import { Plus } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ export default async function ClientsPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Clients"
         description="Manage client records for internal bookings"
         action={
@@ -28,9 +29,9 @@ export default async function ClientsPage() {
           </Link>
         }
       />
-      <Card className="overflow-hidden">
+      <SurfaceCard className="overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className={TABLE_HEAD}>
             <tr>
               <th className="px-6 py-4">Name</th>
               <th className="px-6 py-4">Business</th>
@@ -74,7 +75,7 @@ export default async function ClientsPage() {
             )}
           </tbody>
         </table>
-      </Card>
+      </SurfaceCard>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader, Button, Input, Label } from "@/components/ui";
+import { Button, Input, Label } from "@/components/ui";
+import { PageBanner } from "@/components/dashboard/DashboardUI";
 
 type PricingConfig = {
   commissionRate: number;
@@ -35,7 +36,7 @@ export default function AdminPricingPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Pricing rules"
         description="Configure commission, GST, and TDS rates (decimals, e.g. 0.10 = 10%)"
       />

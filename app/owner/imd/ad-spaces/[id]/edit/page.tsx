@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Label, Select, PageHeader, Card } from "@/components/ui";
+import { Button, Input, Label, Select } from "@/components/ui";
+import { PageBanner, SurfaceCard } from "@/components/dashboard/DashboardUI";
 import { LocationPicker } from "@/components/map/LocationPicker";
 import { AdSpacePreview } from "@/components/ad-space/AdSpacePreview";
 import { PhotoUploader } from "@/components/ad-space/PhotoUploader";
@@ -152,7 +153,7 @@ export default function EditAdSpacePage() {
 
   return (
     <div>
-      <PageHeader title="Edit Ad Space" description="Update inventory details in IMD" />
+      <PageBanner title="Edit Ad Space" description="Update inventory details in IMD" />
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -162,7 +163,7 @@ export default function EditAdSpacePage() {
         <p className="text-sm text-slate-500">Loading…</p>
       ) : ready ? (
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42rem)_minmax(16rem,1fr)]">
-        <Card className="p-6">
+        <SurfaceCard className="p-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -351,7 +352,7 @@ export default function EditAdSpacePage() {
               </Link>
             </div>
           </form>
-        </Card>
+        </SurfaceCard>
         <aside className="lg:sticky lg:top-24">
           <AdSpacePreview
             values={{

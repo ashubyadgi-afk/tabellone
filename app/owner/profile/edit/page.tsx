@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Label, PageHeader, Card } from "@/components/ui";
+import { Button, Input, Label } from "@/components/ui";
+import { PageBanner, SurfaceCard } from "@/components/dashboard/DashboardUI";
 
 export default function EditOwnerProfilePage() {
   const router = useRouter();
@@ -68,7 +69,7 @@ export default function EditOwnerProfilePage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Edit profile"
         description="Update your company and contact details. Login email stays the same."
       />
@@ -80,7 +81,7 @@ export default function EditOwnerProfilePage() {
       {!ready && !error ? (
         <p className="text-sm text-slate-500">Loading…</p>
       ) : ready ? (
-        <Card className="max-w-2xl p-6">
+        <SurfaceCard className="max-w-2xl p-6">
           <form onSubmit={submit} className="space-y-4">
             <div>
               <Label>Login email</Label>
@@ -159,7 +160,7 @@ export default function EditOwnerProfilePage() {
               </Link>
             </div>
           </form>
-        </Card>
+        </SurfaceCard>
       ) : null}
     </div>
   );

@@ -9,7 +9,7 @@ import {
   TABLE_HEAD,
   TABLE_ROW,
   TotalCard,
-} from "@/components/advertiser/AdvertiserUI";
+} from "@/components/dashboard/DashboardUI";
 import { AlarmClock, ArrowUpRight, CheckCircle2, Receipt, Wallet } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { PaymentMethod, PaymentStatus } from "@prisma/client";

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader, Button, Badge } from "@/components/ui";
+import { Button, Badge } from "@/components/ui";
+import { PageBanner } from "@/components/dashboard/DashboardUI";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 type Request = {
@@ -39,7 +40,7 @@ export default function AdminBookingRequestsPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageBanner
         title="Booking requests"
         description="Review advertiser campaign booking requests"
       />
@@ -61,7 +62,7 @@ export default function AdminBookingRequestsPage() {
                   <p className="mt-1 text-sm text-slate-600">
                     {formatDate(req.startDate)} → {formatDate(req.endDate)}
                   </p>
-                  <p className="mt-1 text-sm font-medium text-[#1e3a5f]">
+                  <p className="mt-1 text-sm font-medium text-[#4C4BFF]">
                     {formatCurrency(req.customerPrice)}
                   </p>
                   {req.campaignNotes && (
