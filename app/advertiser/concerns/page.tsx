@@ -21,6 +21,8 @@ type Concern = {
   subject: string;
   message: string;
   status: ConcernStatus;
+  reply: string | null;
+  repliedAt: string | null;
   createdAt: string;
 };
 
@@ -90,7 +92,7 @@ export default function AdvertiserConcernsPage() {
     <div>
       <PageBanner
         title="Queries"
-        description="Raise a query about a booking, payment, campaign, or anything else, and see every query here"
+        description="Raise a query about a booking, payment, campaign, or anything else. Tabellone admin replies appear here."
       />
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -123,7 +125,7 @@ export default function AdvertiserConcernsPage() {
                 onChange={(event) => setMessage(event.target.value)}
                 required
                 rows={5}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1e3a5f] focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]/15"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#4C4BFF] focus:outline-none focus:ring-2 focus:ring-[#4C4BFF]/15"
               />
             </div>
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -158,6 +160,21 @@ export default function AdvertiserConcernsPage() {
                     <Badge variant={statusVariant(concern.status)}>{STATUS_LABEL[concern.status]}</Badge>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">{concern.message}</p>
+                  {concern.reply ? (
+                    <div className="mt-3 rounded-xl bg-emerald-50/80 px-3.5 py-3 ring-1 ring-emerald-100">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                        Reply from Tabellone
+                        {concern.repliedAt ? ` · ${formatDate(concern.repliedAt)}` : ""}
+                      </p>
+                      <p className="mt-1.5 text-sm leading-relaxed text-emerald-900">{concern.reply}</p>
+                    </div>
+                  ) : concern.status === "in_review" ? (
+                    <p className="mt-3 text-xs font-medium text-[#4C4BFF]">
+                      Tabellone is reviewing this query.
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-xs text-slate-400">Waiting for a reply from Tabellone.</p>
+                  )}
                 </li>
               ))}
             </ul>

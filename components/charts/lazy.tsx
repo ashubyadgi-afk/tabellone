@@ -47,6 +47,10 @@ export const LazyBookingTrendChart = dynamic(
   () => loadNamed(() => import("@/components/owner/OwnerDashboardCharts"), "BookingTrendChart"),
   { ssr: false, loading: () => <ChartSkeleton /> }
 );
+export const LazyRevenueBreakdownChart = dynamic(
+  () => loadNamed(() => import("@/components/owner/OwnerDashboardCharts"), "RevenueBreakdownChart"),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
 
 export const LazyFirmGrowthChart = dynamic(
   () => loadNamed(() => import("@/components/admin/AdminDashboardCharts"), "FirmGrowthChart"),
@@ -66,6 +70,14 @@ export const LazyTypesDonut = dynamic(
 );
 export const LazyCommissionMixChart = dynamic(
   () => loadNamed(() => import("@/components/admin/AdminDashboardCharts"), "CommissionMixChart"),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+export const LazyAdminRevenueTrendChart = dynamic(
+  () => loadNamed(() => import("@/components/admin/AdminDashboardCharts"), "AdminRevenueTrendChart"),
+  { ssr: false, loading: () => <ChartSkeleton height={280} /> }
+);
+export const LazyGeographicRevenueChart = dynamic(
+  () => loadNamed(() => import("@/components/admin/AdminDashboardCharts"), "GeographicRevenueChart"),
   { ssr: false, loading: () => <ChartSkeleton /> }
 );
 

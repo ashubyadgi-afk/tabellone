@@ -235,6 +235,123 @@ export function CommissionMixChart({ data }: { data: CommissionSlice[] }) {
   );
 }
 
+export type RevenueTrendPoint = {
+  month: string;
+  label: string;
+  gmv: number;
+  commission: number;
+  payouts: number;
+  collected: number;
+};
+
+function compactRupees(value: number) {
+  if (value >= 1_00_00_000) return `₹${(value / 1_00_00_000).toFixed(1)}Cr`;
+  if (value >= 1_00_000) return `₹${(value / 1_00_000).toFixed(1)}L`;
+  if (value >= 1_000) return `₹${Math.round(value / 1_000)}K`;
+  return `₹${value}`;
+}
+
+export function AdminRevenueTrendChart({ data }: { data: RevenueTrendPoint[] }) {
+  if (data.every((row) => row.gmv === 0 && row.commission === 0 && row.collected === 0)) {
+    return <ChartEmpty text="Revenue trend appears once booking requests are priced." />;
+  }
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
+        <defs>
+          <linearGradient id="adminGmvFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4C4BFF" stopOpacity={0.28} />
+            <stop offset="100%" stopColor="#4C4BFF" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="month" tick={AXIS} axisLine={false} tickLine={false} />
+        <YAxis tick={AXIS} axisLine={false} tickLine={false} tickFormatter={compactRupees} width={52} />
+        <Tooltip
+          contentStyle={TOOLTIP_STYLE}
+          labelFormatter={(_, payload) => payload?.[0]?.payload?.label ?? ""}
+          formatter={(value, name) => [formatCurrency(Number(value)), String(name)]}
+        />
+        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+        <Area
+          type="monotone"
+          dataKey="gmv"
+          name="Booked GMV"
+          stroke="#4C4BFF"
+          strokeWidth={2.5}
+          fill="url(#adminGmvFill)"
+        />
+        <Area
+          type="monotone"
+          dataKey="commission"
+          name="Commission"
+          stroke="#8C47EE"
+          strokeWidth={2}
+          fill="transparent"
+        />
+        <Area
+          type="monotone"
+          dataKey="payouts"
+          name="Owner payout"
+          stroke="#10b981"
+          strokeWidth={2}
+          fill="transparent"
+        />
+        <Area
+          type="monotone"
+          dataKey="collected"
+          name="Collected"
+          stroke="#F06B3B"
+          strokeWidth={2}
+          fill="transparent"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function GeographicRevenueChart({
+  data,
+}: {
+  data: Array<{ label: string; value: number; bookings?: number }>;
+}) {
+  if (data.length === 0) return <ChartEmpty text="Geographic revenue appears once bookings exist." />;
+  const longest = data.reduce((max, row) => Math.max(max, row.label.length), 0);
+  const labelWidth = Math.min(160, Math.max(88, Math.ceil(longest * 7)));
+  return (
+    <ResponsiveContainer width="100%" height={Math.max(220, data.length * 36 + 24)}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="geoFill" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#4C4BFF" />
+            <stop offset="100%" stopColor="#8C47EE" />
+          </linearGradient>
+        </defs>
+        <CartesianGrid stroke={GRID} horizontal={false} />
+        <XAxis type="number" tick={AXIS} axisLine={false} tickLine={false} tickFormatter={compactRupees} />
+        <YAxis
+          type="category"
+          dataKey="label"
+          tick={AXIS}
+          axisLine={false}
+          tickLine={false}
+          width={labelWidth}
+          interval={0}
+        />
+        <Tooltip
+          cursor={{ fill: "rgba(76,75,255,0.06)" }}
+          contentStyle={TOOLTIP_STYLE}
+          formatter={(value, _n, item) => [
+            formatCurrency(Number(value)),
+            `Revenue · ${item?.payload?.bookings ?? 0} bookings`,
+          ]}
+        />
+        <Bar dataKey="value" fill="url(#geoFill)" radius={[0, 8, 8, 0]} maxBarSize={20} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function RevenueBars({
   commission,
   gst,
@@ -254,13 +371,6 @@ export function RevenueBars({
   ];
   if (data.every((row) => row.value === 0)) {
     return <ChartEmpty text="Revenue figures appear once bookings and payments exist." />;
-  }
-
-  function compactRupees(value: number) {
-    if (value >= 1_00_00_000) return `₹${(value / 1_00_00_000).toFixed(1)}Cr`;
-    if (value >= 1_00_000) return `₹${(value / 1_00_000).toFixed(1)}L`;
-    if (value >= 1_000) return `₹${Math.round(value / 1_000)}K`;
-    return `₹${value}`;
   }
 
   return (

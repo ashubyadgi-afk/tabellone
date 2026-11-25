@@ -20,7 +20,7 @@ import { formatCurrency } from "@/lib/utils";
 export type NamedSlice = { name: string; value: number; color: string };
 export type NamedCount = { label: string; value: number; color?: string };
 export type TrendPoint = { month: string; label: string; amount: number; count?: number; bookings?: number };
-export type TopSpace = { name: string; bookings: number; city: string };
+export type TopSpace = { name: string; bookings: number; city: string; revenue?: number };
 
 const AXIS = { fontSize: 11, fill: "#94a3b8" };
 const GRID = "#eef2f7";
@@ -177,30 +177,73 @@ export function BookingTrendChart({ data }: { data: TrendPoint[] }) {
   if (data.every((row) => (row.bookings ?? 0) === 0)) {
     return <ChartEmpty text="Bookings created over time will appear here." />;
   }
+  const hasAmount = data.some((row) => (row.amount ?? 0) > 0);
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
         <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis dataKey="month" tick={AXIS} axisLine={false} tickLine={false} />
-        <YAxis tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
+        <YAxis
+          yAxisId="left"
+          tick={AXIS}
+          axisLine={false}
+          tickLine={false}
+          allowDecimals={false}
+          width={28}
+        />
+        {hasAmount ? (
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            tick={AXIS}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={compactRupees}
+            width={48}
+          />
+        ) : null}
         <Tooltip
           cursor={{ fill: "rgba(140,71,238,0.06)" }}
           contentStyle={TOOLTIP_STYLE}
           labelFormatter={(_, payload) => payload?.[0]?.payload?.label ?? ""}
-          formatter={(value) => [Number(value), "Bookings"]}
+          formatter={(value, name) =>
+            name === "amount" || name === "Booked value"
+              ? [formatCurrency(Number(value)), "Booked value"]
+              : [Number(value), "Bookings"]
+          }
         />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-        <Bar dataKey="bookings" name="Bookings" fill="#8C47EE" radius={[8, 8, 0, 0]} maxBarSize={40} />
+        <Bar
+          yAxisId="left"
+          dataKey="bookings"
+          name="Bookings"
+          fill="#8C47EE"
+          radius={[8, 8, 0, 0]}
+          maxBarSize={40}
+        />
+        {hasAmount ? (
+          <Bar
+            yAxisId="right"
+            dataKey="amount"
+            name="Booked value"
+            fill="#F06B3B"
+            radius={[8, 8, 0, 0]}
+            maxBarSize={28}
+          />
+        ) : null}
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
 export function TopSpacesChart({ data }: { data: TopSpace[] }) {
-  if (data.length === 0) return <ChartEmpty text="Booking leaders appear once spaces have bookings." />;
+  if (data.length === 0) return <ChartEmpty text="Top spaces appear once bookings or invoices exist." />;
+  const useRevenue = data.some((row) => (row.revenue ?? 0) > 0);
+  const longestName = data.reduce((max, row) => Math.max(max, row.name.length), 0);
+  const labelWidth = Math.min(280, Math.max(140, Math.ceil(longestName * 7.2)));
   return (
-    <ResponsiveContainer width="100%" height={Math.max(220, data.length * 40 + 24)}>
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={Math.max(220, data.length * 44 + 24)}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
         <defs>
           <linearGradient id="topSpaceFill" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#4C4BFF" />
@@ -208,25 +251,72 @@ export function TopSpacesChart({ data }: { data: TopSpace[] }) {
           </linearGradient>
         </defs>
         <CartesianGrid stroke={GRID} horizontal={false} />
-        <XAxis type="number" tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} />
-        <YAxis
-          type="category"
-          dataKey="name"
+        <XAxis
+          type="number"
           tick={AXIS}
           axisLine={false}
           tickLine={false}
-          width={130}
-          tickFormatter={(name: string) => (name.length > 16 ? `${name.slice(0, 15)}…` : name)}
+          allowDecimals={false}
+          tickFormatter={useRevenue ? compactRupees : undefined}
+        />
+        <YAxis
+          type="category"
+          dataKey="name"
+          tick={{ ...AXIS, width: labelWidth }}
+          axisLine={false}
+          tickLine={false}
+          width={labelWidth}
+          interval={0}
         />
         <Tooltip
           cursor={{ fill: "rgba(76,75,255,0.06)" }}
           contentStyle={TOOLTIP_STYLE}
-          formatter={(value, _name, item) => [
-            Number(value),
-            `Bookings · ${item?.payload?.city ?? ""}`,
-          ]}
+          formatter={(value, _name, item) => {
+            const city = item?.payload?.city ?? "";
+            if (useRevenue) {
+              return [
+                formatCurrency(Number(value)),
+                `Revenue · ${item?.payload?.bookings ?? 0} bookings · ${city}`,
+              ];
+            }
+            return [Number(value), `Bookings · ${city}`];
+          }}
         />
-        <Bar dataKey="bookings" fill="url(#topSpaceFill)" radius={[0, 8, 8, 0]} maxBarSize={18} />
+        <Bar
+          dataKey={useRevenue ? "revenue" : "bookings"}
+          fill="url(#topSpaceFill)"
+          radius={[0, 8, 8, 0]}
+          maxBarSize={18}
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function RevenueBreakdownChart({ data }: { data: NamedCount[] }) {
+  if (data.length === 0) return <ChartEmpty text="Revenue breakdown appears after bookings or invoices." />;
+  return (
+    <ResponsiveContainer width="100%" height={240}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -4, bottom: 0 }}>
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis
+          dataKey="label"
+          tick={AXIS}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(name: string) => (name.length > 10 ? `${name.slice(0, 9)}…` : name)}
+        />
+        <YAxis tick={AXIS} axisLine={false} tickLine={false} tickFormatter={compactRupees} width={48} />
+        <Tooltip
+          cursor={{ fill: "rgba(76,75,255,0.06)" }}
+          contentStyle={TOOLTIP_STYLE}
+          formatter={(value) => [formatCurrency(Number(value)), "Revenue"]}
+        />
+        <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={44}>
+          {data.map((row) => (
+            <Cell key={row.label} fill={row.color ?? "#4C4BFF"} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

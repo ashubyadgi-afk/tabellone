@@ -1,8 +1,16 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
-import { addMonths, format, startOfMonth, subMonths } from "date-fns";
+import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns";
 
 const OPEN_REQUEST_STATUSES = ["submitted", "under_review"] as const;
+const COMMISSION_STATUSES = [
+  "approved",
+  "payment_pending",
+  "paid",
+  "confirmed",
+] as const;
+const COMPLETED_REQUEST_STATUSES = ["paid", "confirmed"] as const;
+const CANCELLED_REQUEST_STATUSES = ["cancelled", "rejected", "expired"] as const;
 
 export function maskPan(pan?: string | null) {
   const value = pan?.trim();
@@ -104,13 +112,6 @@ export async function getAdminHqStats() {
   };
 }
 
-const COMMISSION_STATUSES = [
-  "approved",
-  "payment_pending",
-  "paid",
-  "confirmed",
-] as const;
-
 export async function getAdminInsights() {
   const monthStart = startOfMonth(subMonths(new Date(), 5));
   const months = Array.from({ length: 6 }, (_, i) => {
@@ -197,6 +198,397 @@ export async function getAdminInsights() {
     },
     popularCities,
     popularTypes,
+  };
+}
+
+/** Extended admin KPI board — Phase-1-safe remaps of marketplace admin metrics. */
+export async function getAdminKpiBoard() {
+  const now = new Date();
+  const thisMonthStart = startOfMonth(now);
+  const thisMonthEnd = endOfMonth(now);
+  const lastMonthStart = startOfMonth(subMonths(now, 1));
+  const trendStart = startOfMonth(subMonths(now, 5));
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const start = startOfMonth(addMonths(trendStart, i));
+    return {
+      key: format(start, "yyyy-MM"),
+      label: format(start, "MMM yyyy"),
+      short: format(start, "MMM"),
+      start,
+      end: startOfMonth(addMonths(start, 1)),
+    };
+  });
+
+  const [
+    gmvAgg,
+    commissionAgg,
+    activeUsers,
+    newOwnersThisMonth,
+    newAdvertisersThisMonth,
+    activeOwners,
+    activeAdvertisers,
+    inactiveOwners,
+    inactiveAdvertisers,
+    newBookingsThisMonth,
+    completedBookings,
+    cancelledBookings,
+    totalBookingsEver,
+    bookingValueAgg,
+    paymentsCompleted,
+    paymentsFailed,
+    paymentsRefunded,
+    paymentsPending,
+    settlementPending,
+    rejectedListings,
+    approvedListings,
+    totalListings,
+    listedSpaces,
+    occupiedListed,
+    openConcerns,
+    pendingListings,
+    pendingRequests,
+    pendingOwnerKyc,
+    pendingAdvertiserKyc,
+    trendRequests,
+    trendPayments,
+    recentPayments,
+    topAdvertiserRows,
+    topPublisherSpaces,
+    bookingCityRows,
+  ] = await Promise.all([
+    prisma.bookingRequest.aggregate({
+      where: { status: { in: [...COMMISSION_STATUSES] } },
+      _sum: { customerPrice: true, commissionAmount: true, ownerPayout: true },
+      _count: true,
+    }),
+    prisma.bookingRequest.aggregate({
+      where: { status: { in: [...COMMISSION_STATUSES] } },
+      _sum: { commissionAmount: true, customerPrice: true },
+    }),
+    prisma.user.count({ where: { status: "active", role: { in: ["owner", "advertiser"] } } }),
+    prisma.organization.count({
+      where: { type: "owner", createdAt: { gte: thisMonthStart, lte: thisMonthEnd } },
+    }),
+    prisma.organization.count({
+      where: { type: "advertiser", createdAt: { gte: thisMonthStart, lte: thisMonthEnd } },
+    }),
+    prisma.organization.count({ where: { type: "owner", status: "active" } }),
+    prisma.organization.count({ where: { type: "advertiser", status: "active" } }),
+    prisma.organization.count({ where: { type: "owner", status: { not: "active" } } }),
+    prisma.organization.count({ where: { type: "advertiser", status: { not: "active" } } }),
+    prisma.bookingRequest.count({
+      where: { createdAt: { gte: thisMonthStart, lte: thisMonthEnd } },
+    }),
+    prisma.bookingRequest.count({
+      where: { status: { in: [...COMPLETED_REQUEST_STATUSES] } },
+    }),
+    prisma.bookingRequest.count({
+      where: { status: { in: [...CANCELLED_REQUEST_STATUSES] } },
+    }),
+    prisma.bookingRequest.count(),
+    prisma.bookingRequest.aggregate({
+      where: { status: { in: [...COMMISSION_STATUSES] } },
+      _avg: { customerPrice: true },
+      _sum: { customerPrice: true },
+      _count: true,
+    }),
+    prisma.payment.aggregate({
+      where: { status: "completed" },
+      _sum: { amount: true },
+      _count: true,
+    }),
+    prisma.payment.count({ where: { status: "failed" } }),
+    prisma.payment.count({ where: { status: "refunded" } }),
+    prisma.payment.count({ where: { status: { in: ["pending", "processing"] } } }),
+    prisma.bookingRequest.count({ where: { status: "payment_pending" } }),
+    prisma.marketplaceListing.count({ where: { status: "rejected" } }),
+    prisma.marketplaceListing.count({ where: { status: "approved" } }),
+    prisma.marketplaceListing.count(),
+    prisma.adSpace.count({ where: { marketplaceListingStatus: "listed" } }),
+    prisma.adSpace.count({
+      where: {
+        marketplaceListingStatus: "listed",
+        bookings: {
+          some: {
+            status: { in: ["confirmed", "active"] },
+            startDate: { lte: now },
+            endDate: { gte: now },
+          },
+        },
+      },
+    }),
+    prisma.concern.count({ where: { status: { in: ["open", "in_review"] } } }),
+    prisma.marketplaceListing.count({
+      where: { status: { in: ["submitted", "under_review"] } },
+    }),
+    prisma.bookingRequest.count({
+      where: { status: { in: [...OPEN_REQUEST_STATUSES] } },
+    }),
+    prisma.ownerProfile.count({ where: { verificationStatus: { not: "approved" } } }),
+    prisma.advertiserProfile.count({
+      where: { verificationStatus: { not: "approved" } },
+    }),
+    prisma.bookingRequest.findMany({
+      where: {
+        createdAt: { gte: trendStart },
+        status: { in: [...COMMISSION_STATUSES] },
+      },
+      select: {
+        createdAt: true,
+        customerPrice: true,
+        commissionAmount: true,
+        ownerPayout: true,
+      },
+    }),
+    prisma.payment.findMany({
+      where: { status: "completed", paidAt: { gte: trendStart } },
+      select: { paidAt: true, amount: true },
+    }),
+    prisma.payment.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        amount: true,
+        method: true,
+        status: true,
+        paidAt: true,
+        createdAt: true,
+        organization: { select: { id: true, name: true } },
+        bookingRequest: {
+          select: {
+            id: true,
+            status: true,
+            adSpace: {
+              select: {
+                name: true,
+                organization: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.bookingRequest.groupBy({
+      by: ["organizationId"],
+      where: { status: { in: [...COMMISSION_STATUSES] } },
+      _sum: { customerPrice: true, commissionAmount: true },
+      _count: { id: true },
+      orderBy: { _sum: { customerPrice: "desc" } },
+      take: 6,
+    }),
+    prisma.adSpace.findMany({
+      where: { organization: { type: "owner" } },
+      select: {
+        organizationId: true,
+        marketplaceListingStatus: true,
+        organization: { select: { id: true, name: true } },
+        bookingRequests: {
+          where: { status: { in: [...COMMISSION_STATUSES] } },
+          select: { ownerPayout: true, customerPrice: true },
+        },
+      },
+    }),
+    prisma.bookingRequest.findMany({
+      where: { status: { in: [...COMMISSION_STATUSES] } },
+      select: {
+        customerPrice: true,
+        adSpace: { select: { city: true } },
+      },
+    }),
+  ]);
+
+  const gmv = gmvAgg._sum.customerPrice ?? 0;
+  const platformCommission = commissionAgg._sum.commissionAmount ?? 0;
+  const takeRate = gmv > 0 ? Math.round((platformCommission / gmv) * 1000) / 10 : 0;
+  const cancellationRate =
+    totalBookingsEver > 0
+      ? Math.round((cancelledBookings / totalBookingsEver) * 1000) / 10
+      : 0;
+  const averageOrderValue = bookingValueAgg._avg.customerPrice ?? 0;
+  const fillRate =
+    listedSpaces > 0
+      ? Math.round((occupiedListed / listedSpaces) * 1000) / 10
+      : 0;
+
+  const revenueTrend = months.map((month) => {
+    const reqs = trendRequests.filter(
+      (r) => r.createdAt >= month.start && r.createdAt < month.end
+    );
+    const pays = trendPayments.filter(
+      (p) => p.paidAt && p.paidAt >= month.start && p.paidAt < month.end
+    );
+    return {
+      month: month.short,
+      label: month.label,
+      gmv: reqs.reduce((sum, r) => sum + (r.customerPrice ?? 0), 0),
+      commission: reqs.reduce((sum, r) => sum + (r.commissionAmount ?? 0), 0),
+      payouts: reqs.reduce((sum, r) => sum + (r.ownerPayout ?? 0), 0),
+      collected: pays.reduce((sum, p) => sum + p.amount, 0),
+    };
+  });
+
+  const advertiserIds = topAdvertiserRows.map((r) => r.organizationId);
+  const advertiserOrgs = advertiserIds.length
+    ? await prisma.organization.findMany({
+        where: { id: { in: advertiserIds } },
+        select: { id: true, name: true },
+      })
+    : [];
+  const advertiserName = new Map(advertiserOrgs.map((o) => [o.id, o.name]));
+
+  const topAdvertisers = topAdvertiserRows.map((row) => {
+    const spend = row._sum.customerPrice ?? 0;
+    const bookings = row._count.id;
+    return {
+      id: row.organizationId,
+      name: advertiserName.get(row.organizationId) ?? "Advertiser",
+      spend,
+      bookings,
+      commission: row._sum.commissionAmount ?? 0,
+      repeatRate: bookings > 1 ? Math.round(((bookings - 1) / bookings) * 1000) / 10 : 0,
+    };
+  });
+
+  const publisherMap = new Map<
+    string,
+    { id: string; name: string; inventory: number; listed: number; revenue: number }
+  >();
+  for (const space of topPublisherSpaces) {
+    const row = publisherMap.get(space.organizationId) ?? {
+      id: space.organization.id,
+      name: space.organization.name,
+      inventory: 0,
+      listed: 0,
+      revenue: 0,
+    };
+    row.inventory += 1;
+    if (space.marketplaceListingStatus === "listed") row.listed += 1;
+    row.revenue += space.bookingRequests.reduce((sum, br) => sum + (br.ownerPayout ?? 0), 0);
+    publisherMap.set(space.organizationId, row);
+  }
+  const topPublishers = [...publisherMap.values()]
+    .map((row) => ({
+      ...row,
+      fillRate: row.listed > 0 ? Math.round((row.listed / row.inventory) * 1000) / 10 : 0,
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 6);
+
+  const cityRevenue = new Map<string, { revenue: number; bookings: number }>();
+  for (const row of bookingCityRows) {
+    const city = row.adSpace.city?.trim() || "Unspecified";
+    const cur = cityRevenue.get(city) ?? { revenue: 0, bookings: 0 };
+    cur.revenue += row.customerPrice ?? 0;
+    cur.bookings += 1;
+    cityRevenue.set(city, cur);
+  }
+  const geographic = [...cityRevenue.entries()]
+    .map(([label, v]) => ({ label, value: v.revenue, bookings: v.bookings }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 8);
+
+  const alerts: Array<{ id: string; title: string; href: string }> = [];
+  if (paymentsFailed > 0) {
+    alerts.push({
+      id: "pay-fail",
+      title: `${paymentsFailed} failed payment${paymentsFailed === 1 ? "" : "s"}`,
+      href: "/admin/booking-requests",
+    });
+  }
+  if (pendingOwnerKyc + pendingAdvertiserKyc > 0) {
+    alerts.push({
+      id: "kyc",
+      title: `${pendingOwnerKyc + pendingAdvertiserKyc} KYC / verification pending`,
+      href: "/admin/owners",
+    });
+  }
+  if (openConcerns > 0) {
+    alerts.push({
+      id: "concerns",
+      title: `${openConcerns} open quer${openConcerns === 1 ? "y" : "ies"} / disputes`,
+      href: "/admin/queries",
+    });
+  }
+  if (rejectedListings > 0) {
+    alerts.push({
+      id: "rejected",
+      title: `${rejectedListings} rejected listing${rejectedListings === 1 ? "" : "s"}`,
+      href: "/admin/listings",
+    });
+  }
+  if (settlementPending > 0) {
+    alerts.push({
+      id: "settle",
+      title: `${settlementPending} booking${settlementPending === 1 ? "" : "s"} awaiting payment`,
+      href: "/admin/booking-requests",
+    });
+  }
+
+  return {
+    business: {
+      gmv,
+      netRevenue: platformCommission,
+      platformCommission,
+      takeRate,
+      activeUsers,
+      ownerPayoutBooked: gmvAgg._sum.ownerPayout ?? 0,
+      pricedBookings: gmvAgg._count,
+    },
+    users: {
+      newAdvertisers: newAdvertisersThisMonth,
+      newPublishers: newOwnersThisMonth,
+      activeAdvertisers,
+      activePublishers: activeOwners,
+      churned: inactiveOwners + inactiveAdvertisers,
+    },
+    bookings: {
+      newThisMonth: newBookingsThisMonth,
+      completed: completedBookings,
+      cancelled: cancelledBookings,
+      cancellationRate,
+      averageOrderValue,
+    },
+    payments: {
+      successfulAmount: paymentsCompleted._sum.amount ?? 0,
+      successfulCount: paymentsCompleted._count,
+      failed: paymentsFailed,
+      refunds: paymentsRefunded,
+      pending: paymentsPending,
+      settlementPending,
+    },
+    inventory: {
+      totalListings,
+      approved: approvedListings,
+      rejected: rejectedListings,
+      available: Math.max(0, listedSpaces - occupiedListed),
+      listed: listedSpaces,
+      fillRate,
+    },
+    moderation: {
+      pendingListings,
+      pendingRequests,
+      openConcerns,
+      pendingKyc: pendingOwnerKyc + pendingAdvertiserKyc,
+    },
+    revenueTrend,
+    geographic,
+    alerts,
+    topAdvertisers,
+    topPublishers,
+    recentTransactions: recentPayments.map((p) => ({
+      id: p.id,
+      bookingId: p.bookingRequest.id,
+      advertiser: p.organization.name,
+      advertiserId: p.organization.id,
+      publisher: p.bookingRequest.adSpace.organization.name,
+      publisherId: p.bookingRequest.adSpace.organization.id,
+      spaceName: p.bookingRequest.adSpace.name,
+      amount: p.amount,
+      status: p.status,
+      method: p.method,
+      at: p.paidAt ?? p.createdAt,
+    })),
   };
 }
 

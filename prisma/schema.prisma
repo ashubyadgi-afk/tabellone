@@ -199,6 +199,7 @@ model User {
   advertiserProfile AdvertiserProfile?
   notifications       Notification[]
   listingReviewEvents ListingReviewEvent[]
+  concernReplies      Concern[]           @relation("ConcernReplies")
 
   @@map("users")
 }
@@ -550,16 +551,20 @@ model Subscription {
 }
 
 model Concern {
-  id             String        @id @default(uuid())
-  organizationId String        @map("organization_id")
-  topic          ConcernTopic
-  subject        String
-  message        String
-  status         ConcernStatus @default(open)
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  id               String        @id @default(uuid())
+  organizationId   String        @map("organization_id")
+  topic            ConcernTopic
+  subject          String
+  message          String
+  status           ConcernStatus @default(open)
+  reply            String?
+  repliedAt        DateTime?     @map("replied_at")
+  repliedByUserId  String?       @map("replied_by_user_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
+  repliedBy    User?        @relation("ConcernReplies", fields: [repliedByUserId], references: [id])
 
   @@map("concerns")
 }

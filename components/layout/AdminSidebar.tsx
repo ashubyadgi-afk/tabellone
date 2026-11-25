@@ -9,6 +9,7 @@ import {
   IndianRupee,
   Building2,
   Users,
+  LifeBuoy,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ const nav = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/listings", label: "Listing approvals", icon: ClipboardCheck },
   { href: "/admin/booking-requests", label: "Booking requests", icon: FileCheck },
+  { href: "/admin/queries", label: "Queries", icon: LifeBuoy },
   { href: "/admin/pricing", label: "Pricing rules", icon: IndianRupee },
   { href: "/admin/owners", label: "Owners", icon: Building2 },
   { href: "/admin/advertisers", label: "Advertisers", icon: Users },

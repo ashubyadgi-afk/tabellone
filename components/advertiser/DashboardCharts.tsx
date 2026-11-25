@@ -319,27 +319,36 @@ export function BookingTimeline({
 
 export function CampaignBudgetChart({ data }: { data: CampaignPoint[] }) {
   if (data.length === 0) return <ChartEmpty text="Create a campaign to track its budget." />;
+  const longestName = data.reduce((max, row) => Math.max(max, row.name.length), 0);
+  const labelWidth = Math.min(220, Math.max(120, Math.ceil(longestName * 7)));
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-        <CartesianGrid stroke={GRID} vertical={false} />
+    <ResponsiveContainer width="100%" height={Math.max(240, data.length * 56 + 48)}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 8 }}>
+        <CartesianGrid stroke={GRID} horizontal={false} />
         <XAxis
-          dataKey="name"
+          type="number"
           tick={AXIS}
           axisLine={false}
           tickLine={false}
-          interval={0}
-          tickFormatter={(name: string) => (name.length > 12 ? `${name.slice(0, 11)}…` : name)}
+          tickFormatter={compactRupees}
         />
-        <YAxis tick={AXIS} axisLine={false} tickLine={false} tickFormatter={compactRupees} width={56} />
+        <YAxis
+          type="category"
+          dataKey="name"
+          tick={{ ...AXIS, width: labelWidth }}
+          axisLine={false}
+          tickLine={false}
+          width={labelWidth}
+          interval={0}
+        />
         <Tooltip
           cursor={{ fill: "rgba(140,71,238,0.06)" }}
           contentStyle={TOOLTIP_STYLE}
           formatter={(value, name) => [formatCurrency(Number(value)), name]}
         />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-        <Bar dataKey="budget" name="Budget" fill="#C4B5FD" radius={[6, 6, 0, 0]} maxBarSize={22} />
-        <Bar dataKey="booked" name="Booked" fill="#8C47EE" radius={[6, 6, 0, 0]} maxBarSize={22} />
+        <Bar dataKey="budget" name="Budget" fill="#C4B5FD" radius={[0, 6, 6, 0]} maxBarSize={14} />
+        <Bar dataKey="booked" name="Booked" fill="#8C47EE" radius={[0, 6, 6, 0]} maxBarSize={14} />
       </BarChart>
     </ResponsiveContainer>
   );
