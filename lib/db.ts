@@ -13,7 +13,10 @@ function databaseUrl() {
   if (!raw) return undefined;
 
   const extras: string[] = [];
-  if (!/[?&]connection_limit=/.test(raw)) extras.push("connection_limit=1");
+  // Neon serverless: keep the pool small, but >1 so a page can run a few queries
+  // without starving parallel layout/session lookups.
+  if (!/[?&]connection_limit=/.test(raw)) extras.push("connection_limit=5");
+  if (!/[?&]pool_timeout=/.test(raw)) extras.push("pool_timeout=20");
   if (!/[?&]connect_timeout=/.test(raw)) extras.push("connect_timeout=10");
 
   if (!extras.length) return raw;

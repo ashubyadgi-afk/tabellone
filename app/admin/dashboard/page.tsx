@@ -172,13 +172,12 @@ function QueueChip({
 }
 
 export default async function AdminDashboardPage() {
-  const [stats, insights, kpi, owners, advertisers] = await Promise.all([
-    getAdminHqStats(),
-    getAdminInsights(),
-    getAdminKpiBoard(),
-    listOwnerOrganizations({ take: 6 }),
-    listAdvertiserOrganizations({ take: 6 }),
-  ]);
+  // Sequential loads — Neon pool is small; parallelizing these starved connections (P2024).
+  const stats = await getAdminHqStats();
+  const insights = await getAdminInsights();
+  const kpi = await getAdminKpiBoard();
+  const owners = await listOwnerOrganizations({ take: 6 });
+  const advertisers = await listAdvertiserOrganizations({ take: 6 });
 
   const commissionSlices = [
     { name: "Platform commission", value: insights.commission.commissionAmount, color: "#8C47EE" },

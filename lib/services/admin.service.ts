@@ -49,21 +49,21 @@ export async function getAdminHqStats() {
     adSpacesTotal,
     adSpacesListed,
     adSpacesImdActive,
-    campaigns,
-    openBookingRequests,
-    approvedListings,
-    pendingListings,
-    pendingRequests,
-    pendingOwnerVerification,
-    pendingAdvertiserVerification,
-    revenue,
-    cityRows,
   ] = await Promise.all([
     prisma.organization.count({ where: { type: "owner" } }),
     prisma.organization.count({ where: { type: "advertiser" } }),
     prisma.adSpace.count(),
     prisma.adSpace.count({ where: { marketplaceListingStatus: "listed" } }),
     prisma.adSpace.count({ where: { imdStatus: "active" } }),
+  ]);
+
+  const [
+    campaigns,
+    openBookingRequests,
+    approvedListings,
+    pendingListings,
+    pendingRequests,
+  ] = await Promise.all([
     prisma.campaign.count(),
     prisma.bookingRequest.count({
       where: { status: { in: [...OPEN_REQUEST_STATUSES] } },
@@ -75,6 +75,14 @@ export async function getAdminHqStats() {
     prisma.bookingRequest.count({
       where: { status: { in: [...OPEN_REQUEST_STATUSES] } },
     }),
+  ]);
+
+  const [
+    pendingOwnerVerification,
+    pendingAdvertiserVerification,
+    revenue,
+    cityRows,
+  ] = await Promise.all([
     prisma.ownerProfile.count({
       where: { verificationStatus: { not: "approved" } },
     }),
@@ -201,12 +209,11 @@ export async function getAdminInsights() {
   };
 }
 
-/** Extended admin KPI board — Phase-1-safe remaps of marketplace admin metrics. */
+/** Extended admin KPI board — few bulk queries, compute in memory (Neon pool-safe). */
 export async function getAdminKpiBoard() {
   const now = new Date();
   const thisMonthStart = startOfMonth(now);
   const thisMonthEnd = endOfMonth(now);
-  const lastMonthStart = startOfMonth(subMonths(now, 1));
   const trendStart = startOfMonth(subMonths(now, 5));
   const months = Array.from({ length: 6 }, (_, i) => {
     const start = startOfMonth(addMonths(trendStart, i));
@@ -219,139 +226,33 @@ export async function getAdminKpiBoard() {
     };
   });
 
-  const [
-    gmvAgg,
-    commissionAgg,
-    activeUsers,
-    newOwnersThisMonth,
-    newAdvertisersThisMonth,
-    activeOwners,
-    activeAdvertisers,
-    inactiveOwners,
-    inactiveAdvertisers,
-    newBookingsThisMonth,
-    completedBookings,
-    cancelledBookings,
-    totalBookingsEver,
-    bookingValueAgg,
-    paymentsCompleted,
-    paymentsFailed,
-    paymentsRefunded,
-    paymentsPending,
-    settlementPending,
-    rejectedListings,
-    approvedListings,
-    totalListings,
-    listedSpaces,
-    occupiedListed,
-    openConcerns,
-    pendingListings,
-    pendingRequests,
-    pendingOwnerKyc,
-    pendingAdvertiserKyc,
-    trendRequests,
-    trendPayments,
-    recentPayments,
-    topAdvertiserRows,
-    topPublisherSpaces,
-    bookingCityRows,
-  ] = await Promise.all([
-    prisma.bookingRequest.aggregate({
-      where: { status: { in: [...COMMISSION_STATUSES] } },
-      _sum: { customerPrice: true, commissionAmount: true, ownerPayout: true },
-      _count: true,
-    }),
-    prisma.bookingRequest.aggregate({
-      where: { status: { in: [...COMMISSION_STATUSES] } },
-      _sum: { commissionAmount: true, customerPrice: true },
-    }),
-    prisma.user.count({ where: { status: "active", role: { in: ["owner", "advertiser"] } } }),
-    prisma.organization.count({
-      where: { type: "owner", createdAt: { gte: thisMonthStart, lte: thisMonthEnd } },
-    }),
-    prisma.organization.count({
-      where: { type: "advertiser", createdAt: { gte: thisMonthStart, lte: thisMonthEnd } },
-    }),
-    prisma.organization.count({ where: { type: "owner", status: "active" } }),
-    prisma.organization.count({ where: { type: "advertiser", status: "active" } }),
-    prisma.organization.count({ where: { type: "owner", status: { not: "active" } } }),
-    prisma.organization.count({ where: { type: "advertiser", status: { not: "active" } } }),
-    prisma.bookingRequest.count({
-      where: { createdAt: { gte: thisMonthStart, lte: thisMonthEnd } },
-    }),
-    prisma.bookingRequest.count({
-      where: { status: { in: [...COMPLETED_REQUEST_STATUSES] } },
-    }),
-    prisma.bookingRequest.count({
-      where: { status: { in: [...CANCELLED_REQUEST_STATUSES] } },
-    }),
-    prisma.bookingRequest.count(),
-    prisma.bookingRequest.aggregate({
-      where: { status: { in: [...COMMISSION_STATUSES] } },
-      _avg: { customerPrice: true },
-      _sum: { customerPrice: true },
-      _count: true,
-    }),
-    prisma.payment.aggregate({
-      where: { status: "completed" },
-      _sum: { amount: true },
-      _count: true,
-    }),
-    prisma.payment.count({ where: { status: "failed" } }),
-    prisma.payment.count({ where: { status: "refunded" } }),
-    prisma.payment.count({ where: { status: { in: ["pending", "processing"] } } }),
-    prisma.bookingRequest.count({ where: { status: "payment_pending" } }),
-    prisma.marketplaceListing.count({ where: { status: "rejected" } }),
-    prisma.marketplaceListing.count({ where: { status: "approved" } }),
-    prisma.marketplaceListing.count(),
-    prisma.adSpace.count({ where: { marketplaceListingStatus: "listed" } }),
-    prisma.adSpace.count({
-      where: {
-        marketplaceListingStatus: "listed",
-        bookings: {
-          some: {
-            status: { in: ["confirmed", "active"] },
-            startDate: { lte: now },
-            endDate: { gte: now },
-          },
-        },
-      },
-    }),
-    prisma.concern.count({ where: { status: { in: ["open", "in_review"] } } }),
-    prisma.marketplaceListing.count({
-      where: { status: { in: ["submitted", "under_review"] } },
-    }),
-    prisma.bookingRequest.count({
-      where: { status: { in: [...OPEN_REQUEST_STATUSES] } },
-    }),
-    prisma.ownerProfile.count({ where: { verificationStatus: { not: "approved" } } }),
-    prisma.advertiserProfile.count({
-      where: { verificationStatus: { not: "approved" } },
-    }),
+  // Batch 1 — core rows (max 4 concurrent)
+  const [bookingRequests, payments, organizations, adSpaces] = await Promise.all([
     prisma.bookingRequest.findMany({
-      where: {
-        createdAt: { gte: trendStart },
-        status: { in: [...COMMISSION_STATUSES] },
-      },
       select: {
+        id: true,
+        organizationId: true,
+        status: true,
         createdAt: true,
         customerPrice: true,
         commissionAmount: true,
         ownerPayout: true,
+        adSpace: {
+          select: {
+            name: true,
+            city: true,
+            organizationId: true,
+            organization: { select: { id: true, name: true } },
+          },
+        },
       },
     }),
     prisma.payment.findMany({
-      where: { status: "completed", paidAt: { gte: trendStart } },
-      select: { paidAt: true, amount: true },
-    }),
-    prisma.payment.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 8,
       select: {
         id: true,
         amount: true,
-        method: true,
         status: true,
+        method: true,
         paidAt: true,
         createdAt: true,
         organization: { select: { id: true, name: true } },
@@ -369,55 +270,121 @@ export async function getAdminKpiBoard() {
         },
       },
     }),
-    prisma.bookingRequest.groupBy({
-      by: ["organizationId"],
-      where: { status: { in: [...COMMISSION_STATUSES] } },
-      _sum: { customerPrice: true, commissionAmount: true },
-      _count: { id: true },
-      orderBy: { _sum: { customerPrice: "desc" } },
-      take: 6,
+    prisma.organization.findMany({
+      select: { id: true, name: true, type: true, status: true, createdAt: true },
     }),
     prisma.adSpace.findMany({
-      where: { organization: { type: "owner" } },
       select: {
         organizationId: true,
         marketplaceListingStatus: true,
-        organization: { select: { id: true, name: true } },
-        bookingRequests: {
-          where: { status: { in: [...COMMISSION_STATUSES] } },
-          select: { ownerPayout: true, customerPrice: true },
+        imdStatus: true,
+        city: true,
+        organization: { select: { id: true, name: true, type: true } },
+        bookings: {
+          where: {
+            status: { in: ["confirmed", "active"] },
+            startDate: { lte: now },
+            endDate: { gte: now },
+          },
+          select: { id: true },
+          take: 1,
         },
-      },
-    }),
-    prisma.bookingRequest.findMany({
-      where: { status: { in: [...COMMISSION_STATUSES] } },
-      select: {
-        customerPrice: true,
-        adSpace: { select: { city: true } },
       },
     }),
   ]);
 
-  const gmv = gmvAgg._sum.customerPrice ?? 0;
-  const platformCommission = commissionAgg._sum.commissionAmount ?? 0;
+  // Batch 2 — small counts
+  const [activeUsers, openConcerns, pendingOwnerKyc, pendingAdvertiserKyc, listingGroups] =
+    await Promise.all([
+      prisma.user.count({
+        where: { status: "active", role: { in: ["owner", "advertiser"] } },
+      }),
+      prisma.concern.count({ where: { status: { in: ["open", "in_review"] } } }),
+      prisma.ownerProfile.count({ where: { verificationStatus: { not: "approved" } } }),
+      prisma.advertiserProfile.count({
+        where: { verificationStatus: { not: "approved" } },
+      }),
+      prisma.marketplaceListing.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+    ]);
+
+  const priced = bookingRequests.filter((r) =>
+    (COMMISSION_STATUSES as readonly string[]).includes(r.status)
+  );
+  const gmv = priced.reduce((sum, r) => sum + (r.customerPrice ?? 0), 0);
+  const platformCommission = priced.reduce((sum, r) => sum + (r.commissionAmount ?? 0), 0);
+  const ownerPayoutBooked = priced.reduce((sum, r) => sum + (r.ownerPayout ?? 0), 0);
   const takeRate = gmv > 0 ? Math.round((platformCommission / gmv) * 1000) / 10 : 0;
+
+  const completedBookings = bookingRequests.filter((r) =>
+    (COMPLETED_REQUEST_STATUSES as readonly string[]).includes(r.status)
+  ).length;
+  const cancelledBookings = bookingRequests.filter((r) =>
+    (CANCELLED_REQUEST_STATUSES as readonly string[]).includes(r.status)
+  ).length;
+  const totalBookingsEver = bookingRequests.length;
   const cancellationRate =
     totalBookingsEver > 0
       ? Math.round((cancelledBookings / totalBookingsEver) * 1000) / 10
       : 0;
-  const averageOrderValue = bookingValueAgg._avg.customerPrice ?? 0;
-  const fillRate =
-    listedSpaces > 0
-      ? Math.round((occupiedListed / listedSpaces) * 1000) / 10
+  const newBookingsThisMonth = bookingRequests.filter(
+    (r) => r.createdAt >= thisMonthStart && r.createdAt <= thisMonthEnd
+  ).length;
+  const averageOrderValue =
+    priced.length > 0
+      ? priced.reduce((sum, r) => sum + (r.customerPrice ?? 0), 0) / priced.length
       : 0;
+  const settlementPending = bookingRequests.filter((r) => r.status === "payment_pending").length;
+  const pendingRequests = bookingRequests.filter((r) =>
+    (OPEN_REQUEST_STATUSES as readonly string[]).includes(r.status)
+  ).length;
+
+  const completedPays = payments.filter((p) => p.status === "completed");
+  const paymentsFailed = payments.filter((p) => p.status === "failed").length;
+  const paymentsRefunded = payments.filter((p) => p.status === "refunded").length;
+  const paymentsPending = payments.filter((p) =>
+    ["pending", "processing"].includes(p.status)
+  ).length;
+
+  const listingCount = (status: string) =>
+    listingGroups.find((g) => g.status === status)?._count._all ?? 0;
+  const totalListings = listingGroups.reduce((sum, g) => sum + g._count._all, 0);
+  const approvedListings = listingCount("approved");
+  const rejectedListings = listingCount("rejected");
+  const pendingListings =
+    listingCount("submitted") + listingCount("under_review");
+
+  const listedSpaces = adSpaces.filter((s) => s.marketplaceListingStatus === "listed").length;
+  const occupiedListed = adSpaces.filter(
+    (s) => s.marketplaceListingStatus === "listed" && s.bookings.length > 0
+  ).length;
+  const fillRate =
+    listedSpaces > 0 ? Math.round((occupiedListed / listedSpaces) * 1000) / 10 : 0;
+
+  const owners = organizations.filter((o) => o.type === "owner");
+  const advertisers = organizations.filter((o) => o.type === "advertiser");
+  const newPublishers = owners.filter(
+    (o) => o.createdAt >= thisMonthStart && o.createdAt <= thisMonthEnd
+  ).length;
+  const newAdvertisers = advertisers.filter(
+    (o) => o.createdAt >= thisMonthStart && o.createdAt <= thisMonthEnd
+  ).length;
+  const activePublishers = owners.filter((o) => o.status === "active").length;
+  const activeAdvertisers = advertisers.filter((o) => o.status === "active").length;
+  const churned =
+    owners.filter((o) => o.status !== "active").length +
+    advertisers.filter((o) => o.status !== "active").length;
 
   const revenueTrend = months.map((month) => {
-    const reqs = trendRequests.filter(
+    const reqs = priced.filter(
       (r) => r.createdAt >= month.start && r.createdAt < month.end
     );
-    const pays = trendPayments.filter(
-      (p) => p.paidAt && p.paidAt >= month.start && p.paidAt < month.end
-    );
+    const pays = completedPays.filter((p) => {
+      const at = p.paidAt ?? p.createdAt;
+      return at >= month.start && at < month.end;
+    });
     return {
       month: month.short,
       label: month.label,
@@ -428,33 +395,43 @@ export async function getAdminKpiBoard() {
     };
   });
 
-  const advertiserIds = topAdvertiserRows.map((r) => r.organizationId);
-  const advertiserOrgs = advertiserIds.length
-    ? await prisma.organization.findMany({
-        where: { id: { in: advertiserIds } },
-        select: { id: true, name: true },
-      })
-    : [];
-  const advertiserName = new Map(advertiserOrgs.map((o) => [o.id, o.name]));
-
-  const topAdvertisers = topAdvertiserRows.map((row) => {
-    const spend = row._sum.customerPrice ?? 0;
-    const bookings = row._count.id;
-    return {
-      id: row.organizationId,
-      name: advertiserName.get(row.organizationId) ?? "Advertiser",
-      spend,
-      bookings,
-      commission: row._sum.commissionAmount ?? 0,
-      repeatRate: bookings > 1 ? Math.round(((bookings - 1) / bookings) * 1000) / 10 : 0,
+  const advertiserSpend = new Map<
+    string,
+    { spend: number; bookings: number; commission: number }
+  >();
+  for (const r of priced) {
+    const row = advertiserSpend.get(r.organizationId) ?? {
+      spend: 0,
+      bookings: 0,
+      commission: 0,
     };
-  });
+    row.spend += r.customerPrice ?? 0;
+    row.bookings += 1;
+    row.commission += r.commissionAmount ?? 0;
+    advertiserSpend.set(r.organizationId, row);
+  }
+  const orgName = new Map(organizations.map((o) => [o.id, o.name]));
+  const topAdvertisers = [...advertiserSpend.entries()]
+    .map(([id, row]) => ({
+      id,
+      name: orgName.get(id) ?? "Advertiser",
+      spend: row.spend,
+      bookings: row.bookings,
+      commission: row.commission,
+      repeatRate:
+        row.bookings > 1
+          ? Math.round(((row.bookings - 1) / row.bookings) * 1000) / 10
+          : 0,
+    }))
+    .sort((a, b) => b.spend - a.spend)
+    .slice(0, 6);
 
   const publisherMap = new Map<
     string,
     { id: string; name: string; inventory: number; listed: number; revenue: number }
   >();
-  for (const space of topPublisherSpaces) {
+  for (const space of adSpaces) {
+    if (space.organization.type !== "owner") continue;
     const row = publisherMap.get(space.organizationId) ?? {
       id: space.organization.id,
       name: space.organization.name,
@@ -464,22 +441,27 @@ export async function getAdminKpiBoard() {
     };
     row.inventory += 1;
     if (space.marketplaceListingStatus === "listed") row.listed += 1;
-    row.revenue += space.bookingRequests.reduce((sum, br) => sum + (br.ownerPayout ?? 0), 0);
     publisherMap.set(space.organizationId, row);
+  }
+  for (const r of priced) {
+    const pubId = r.adSpace.organizationId;
+    const row = publisherMap.get(pubId);
+    if (row) row.revenue += r.ownerPayout ?? 0;
   }
   const topPublishers = [...publisherMap.values()]
     .map((row) => ({
       ...row,
-      fillRate: row.listed > 0 ? Math.round((row.listed / row.inventory) * 1000) / 10 : 0,
+      fillRate:
+        row.inventory > 0 ? Math.round((row.listed / row.inventory) * 1000) / 10 : 0,
     }))
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 6);
 
   const cityRevenue = new Map<string, { revenue: number; bookings: number }>();
-  for (const row of bookingCityRows) {
-    const city = row.adSpace.city?.trim() || "Unspecified";
+  for (const r of priced) {
+    const city = r.adSpace.city?.trim() || "Unspecified";
     const cur = cityRevenue.get(city) ?? { revenue: 0, bookings: 0 };
-    cur.revenue += row.customerPrice ?? 0;
+    cur.revenue += r.customerPrice ?? 0;
     cur.bookings += 1;
     cityRevenue.set(city, cur);
   }
@@ -488,6 +470,7 @@ export async function getAdminKpiBoard() {
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
+  const pendingKyc = pendingOwnerKyc + pendingAdvertiserKyc;
   const alerts: Array<{ id: string; title: string; href: string }> = [];
   if (paymentsFailed > 0) {
     alerts.push({
@@ -496,10 +479,10 @@ export async function getAdminKpiBoard() {
       href: "/admin/booking-requests",
     });
   }
-  if (pendingOwnerKyc + pendingAdvertiserKyc > 0) {
+  if (pendingKyc > 0) {
     alerts.push({
       id: "kyc",
-      title: `${pendingOwnerKyc + pendingAdvertiserKyc} KYC / verification pending`,
+      title: `${pendingKyc} KYC / verification pending`,
       href: "/admin/owners",
     });
   }
@@ -525,6 +508,10 @@ export async function getAdminKpiBoard() {
     });
   }
 
+  const recentPayments = [...payments]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 8);
+
   return {
     business: {
       gmv,
@@ -532,15 +519,15 @@ export async function getAdminKpiBoard() {
       platformCommission,
       takeRate,
       activeUsers,
-      ownerPayoutBooked: gmvAgg._sum.ownerPayout ?? 0,
-      pricedBookings: gmvAgg._count,
+      ownerPayoutBooked,
+      pricedBookings: priced.length,
     },
     users: {
-      newAdvertisers: newAdvertisersThisMonth,
-      newPublishers: newOwnersThisMonth,
+      newAdvertisers,
+      newPublishers,
       activeAdvertisers,
-      activePublishers: activeOwners,
-      churned: inactiveOwners + inactiveAdvertisers,
+      activePublishers,
+      churned,
     },
     bookings: {
       newThisMonth: newBookingsThisMonth,
@@ -550,8 +537,8 @@ export async function getAdminKpiBoard() {
       averageOrderValue,
     },
     payments: {
-      successfulAmount: paymentsCompleted._sum.amount ?? 0,
-      successfulCount: paymentsCompleted._count,
+      successfulAmount: completedPays.reduce((sum, p) => sum + p.amount, 0),
+      successfulCount: completedPays.length,
       failed: paymentsFailed,
       refunds: paymentsRefunded,
       pending: paymentsPending,
@@ -569,7 +556,7 @@ export async function getAdminKpiBoard() {
       pendingListings,
       pendingRequests,
       openConcerns,
-      pendingKyc: pendingOwnerKyc + pendingAdvertiserKyc,
+      pendingKyc,
     },
     revenueTrend,
     geographic,
