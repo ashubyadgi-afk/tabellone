@@ -28,6 +28,13 @@ body {
     );
   }
 
+  /* Logo strip — pale lavender box with full visible border */
+  .tabellone-logo-strip {
+    background: #f5f5fa;
+    border: 1px solid rgba(15, 23, 42, 0.18);
+    border-radius: 0.85rem;
+  }
+
   .hero-glow {
     background: radial-gradient(
       ellipse 80% 60% at 50% -20%,

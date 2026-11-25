@@ -25,7 +25,9 @@ export default async function OwnerLayout({
         />
       </div>
       <div className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto print:h-auto print:overflow-visible">
-        <main className="flex-1 p-6 lg:p-8 print:p-0">{children}</main>
+        <main className="flex-1 px-6 pb-6 pt-3 lg:px-8 lg:pb-8 lg:pt-3 print:p-0">
+          {children}
+        </main>
       </div>
     </div>
   );
